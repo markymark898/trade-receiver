@@ -125,19 +125,19 @@ export const getReceiveTradingViewWebhookUrl = () => {
 }
 
 /**
- * Endpoint to paste into TradingView's alert webhook URL field. Accepts the alert payload and stores it as a trade signal.
+ * Endpoint to paste into TradingView's alert webhook URL field. Accepts the alert payload (JSON or plain text) and stores it as a trade signal.
 
  * @summary Receive webhook from TradingView
  */
-export const receiveTradingViewWebhook = async (webhookPayload: WebhookPayload, options?: RequestInit): Promise<TradeSignal> => {
+export const receiveTradingViewWebhook = async (receiveTradingViewWebhookBody: WebhookPayload | string, options?: RequestInit): Promise<TradeSignal> => {
 
   return customFetch<TradeSignal>(getReceiveTradingViewWebhookUrl(),
   {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    method: 'POST'
+    ,
     body: JSON.stringify(
-      webhookPayload,)
+      receiveTradingViewWebhookBody,)
   }
 );}
 
@@ -145,8 +145,8 @@ export const receiveTradingViewWebhook = async (webhookPayload: WebhookPayload, 
 
 
 export const getReceiveTradingViewWebhookMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof receiveTradingViewWebhook>>, TError,{data: BodyType<WebhookPayload>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof receiveTradingViewWebhook>>, TError,{data: BodyType<WebhookPayload>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof receiveTradingViewWebhook>>, TError,{data: BodyType<WebhookPayload | string>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof receiveTradingViewWebhook>>, TError,{data: BodyType<WebhookPayload | string>}, TContext> => {
 
 const mutationKey = ['receiveTradingViewWebhook'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -158,7 +158,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof receiveTradingViewWebhook>>, {data: BodyType<WebhookPayload>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof receiveTradingViewWebhook>>, {data: BodyType<WebhookPayload | string>}> = (props) => {
           const {data} = props ?? {};
 
           return  receiveTradingViewWebhook(data,requestOptions)
@@ -172,18 +172,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type ReceiveTradingViewWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof receiveTradingViewWebhook>>>
-    export type ReceiveTradingViewWebhookMutationBody = BodyType<WebhookPayload>
+    export type ReceiveTradingViewWebhookMutationBody = BodyType<WebhookPayload | string>
     export type ReceiveTradingViewWebhookMutationError = ErrorType<void>
 
     /**
  * @summary Receive webhook from TradingView
  */
 export const useReceiveTradingViewWebhook = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof receiveTradingViewWebhook>>, TError,{data: BodyType<WebhookPayload>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof receiveTradingViewWebhook>>, TError,{data: BodyType<WebhookPayload | string>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof receiveTradingViewWebhook>>,
         TError,
-        {data: BodyType<WebhookPayload>},
+        {data: BodyType<WebhookPayload | string>},
         TContext
       > => {
       return useMutation(getReceiveTradingViewWebhookMutationOptions(options));

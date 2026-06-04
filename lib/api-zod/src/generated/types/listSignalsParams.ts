@@ -5,9 +5,8 @@
  * Trade Request Receiver API
  * OpenAPI spec version: 0.1.0
  */
-import type { ListSignalsAction } from './listSignalsAction';
 
 export type ListSignalsParams = {
 limit?: number;
-action?: ListSignalsAction;
+action?: string;
 };

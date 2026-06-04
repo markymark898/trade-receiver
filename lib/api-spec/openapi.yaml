@@ -34,13 +34,16 @@ paths:
       summary: Receive webhook from TradingView
       description: >
         Endpoint to paste into TradingView's alert webhook URL field.
-        Accepts the alert payload and stores it as a trade signal.
+        Accepts the alert payload (JSON or plain text) and stores it as a trade signal.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/WebhookPayload"
+          text/plain:
+            schema:
+              type: string
       responses:
         "200":
           description: Signal received and stored
@@ -66,7 +69,6 @@ paths:
           in: query
           schema:
             type: string
-            enum: [buy, sell, buy_long, sell_short, close_long, close_short]
       responses:
         "200":
           description: List of signals
@@ -122,31 +124,68 @@ components:
 
     WebhookPayload:
       type: object
+      description: TradingView alert payload — all fields are optional and come from the alert message template
       properties:
         ticker:
-          type: string
-          description: Trading pair or symbol, e.g. BTCUSDT
-        action:
-          type: string
-          description: Trade action, e.g. buy, sell, close_long
-        price:
-          type: ["number", "null"]
-          description: Price at signal time
-        quantity:
-          type: ["number", "null"]
-          description: Position size
-        strategy:
           type: ["string", "null"]
-          description: Name of the TradingView strategy
-        message:
-          type: ["string", "null"]
-          description: Custom alert message text
+          description: "{{ticker}} — trading symbol e.g. BTCUSDT"
         exchange:
           type: ["string", "null"]
-          description: Exchange name, e.g. BINANCE
+          description: "{{exchange}} — exchange name e.g. BINANCE"
         interval:
           type: ["string", "null"]
-          description: Chart interval, e.g. 1h, 4h, 1d
+          description: "{{interval}} — chart timeframe e.g. 1h, 4h, 1D"
+        action:
+          type: ["string", "null"]
+          description: "{{strategy.order.action}} — buy or sell"
+        price:
+          type: ["number", "null"]
+          description: "{{close}} — close price at alert time"
+        open:
+          type: ["number", "null"]
+          description: "{{open}} — open price of the bar"
+        high:
+          type: ["number", "null"]
+          description: "{{high}} — high price of the bar"
+        low:
+          type: ["number", "null"]
+          description: "{{low}} — low price of the bar"
+        volume:
+          type: ["number", "null"]
+          description: "{{volume}} — bar volume"
+        time:
+          type: ["string", "null"]
+          description: "{{time}} — UTC time when alert triggered (yyyy-MM-ddTHH:mm:ssZ)"
+        timenow:
+          type: ["string", "null"]
+          description: "{{timenow}} — current fire time of the alert"
+        currency:
+          type: ["string", "null"]
+          description: "{{syminfo.currency}} — quote currency e.g. USD"
+        basecurrency:
+          type: ["string", "null"]
+          description: "{{syminfo.basecurrency}} — base currency e.g. BTC"
+        quantity:
+          type: ["number", "null"]
+          description: "{{strategy.order.contracts}} — number of contracts"
+        strategy:
+          type: ["string", "null"]
+          description: Name of the strategy (custom field)"
+        message:
+          type: ["string", "null"]
+          description: Custom message text from the alert"
+        position_size:
+          type: ["number", "null"]
+          description: "{{strategy.position_size}} — current position size"
+        order_price:
+          type: ["number", "null"]
+          description: "{{strategy.order.price}} — fill price of the order"
+        order_id:
+          type: ["string", "null"]
+          description: "{{strategy.order.id}} — order ID string"
+        order_comment:
+          type: ["string", "null"]
+          description: "{{strategy.order.comment}} — order comment"
 
     TradeSignal:
       type: object
@@ -160,6 +199,14 @@ components:
           type: string
         price:
           type: ["number", "null"]
+        open:
+          type: ["number", "null"]
+        high:
+          type: ["number", "null"]
+        low:
+          type: ["number", "null"]
+        volume:
+          type: ["number", "null"]
         quantity:
           type: ["number", "null"]
         strategy:
@@ -169,6 +216,23 @@ components:
         exchange:
           type: ["string", "null"]
         interval:
+          type: ["string", "null"]
+        currency:
+          type: ["string", "null"]
+        basecurrency:
+          type: ["string", "null"]
+        alertTime:
+          type: ["string", "null"]
+          description: The {{time}} value from TradingView
+        timenow:
+          type: ["string", "null"]
+        positionSize:
+          type: ["number", "null"]
+        orderPrice:
+          type: ["number", "null"]
+        orderId:
+          type: ["string", "null"]
+        orderComment:
           type: ["string", "null"]
         receivedAt:
           type: string

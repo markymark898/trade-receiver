@@ -14,6 +14,14 @@ export interface TradeSignal {
   /** @nullable */
   price?: number | null;
   /** @nullable */
+  open?: number | null;
+  /** @nullable */
+  high?: number | null;
+  /** @nullable */
+  low?: number | null;
+  /** @nullable */
+  volume?: number | null;
+  /** @nullable */
   quantity?: number | null;
   /** @nullable */
   strategy?: string | null;
@@ -23,6 +31,25 @@ export interface TradeSignal {
   exchange?: string | null;
   /** @nullable */
   interval?: string | null;
+  /** @nullable */
+  currency?: string | null;
+  /** @nullable */
+  basecurrency?: string | null;
+  /**
+     * The {{time}} value from TradingView
+     * @nullable
+     */
+  alertTime?: string | null;
+  /** @nullable */
+  timenow?: string | null;
+  /** @nullable */
+  positionSize?: number | null;
+  /** @nullable */
+  orderPrice?: number | null;
+  /** @nullable */
+  orderId?: string | null;
+  /** @nullable */
+  orderComment?: string | null;
   receivedAt: Date;
   /** Full raw payload as received */
   raw: TradeSignalRaw;

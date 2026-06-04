@@ -2,10 +2,11 @@ import { Router } from "express";
 import { db, signalsTable } from "@workspace/db";
 import { desc, eq, sql, or, like } from "drizzle-orm";
 import { ListSignalsQueryParams } from "@workspace/api-zod";
+import { formatSignal } from "./webhook";
 
 const router = Router();
 
-router.get("/signals/stats", async (req, res) => {
+router.get("/signals/stats", async (_req, res) => {
   const totalResult = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(signalsTable);
@@ -52,25 +53,13 @@ router.get("/signals/stats", async (req, res) => {
     .orderBy(desc(sql`count(*)`))
     .limit(10);
 
-  res.json({
-    total,
-    buys,
-    sells,
-    lastSignalAt,
-    tickerBreakdown: tickerRows,
-  });
+  res.json({ total, buys, sells, lastSignalAt, tickerBreakdown: tickerRows });
 });
 
 router.get("/signals", async (req, res) => {
   const parsed = ListSignalsQueryParams.safeParse(req.query);
   const limit = parsed.success && parsed.data.limit ? parsed.data.limit : 50;
   const actionFilter = parsed.success ? parsed.data.action : undefined;
-
-  const query = db
-    .select()
-    .from(signalsTable)
-    .orderBy(desc(signalsTable.receivedAt))
-    .limit(limit);
 
   let rows;
   if (actionFilter) {
@@ -81,24 +70,14 @@ router.get("/signals", async (req, res) => {
       .orderBy(desc(signalsTable.receivedAt))
       .limit(limit);
   } else {
-    rows = await query;
+    rows = await db
+      .select()
+      .from(signalsTable)
+      .orderBy(desc(signalsTable.receivedAt))
+      .limit(limit);
   }
 
-  res.json(
-    rows.map((s) => ({
-      id: s.id,
-      ticker: s.ticker,
-      action: s.action,
-      price: s.price != null ? Number(s.price) : null,
-      quantity: s.quantity != null ? Number(s.quantity) : null,
-      strategy: s.strategy,
-      message: s.message,
-      exchange: s.exchange,
-      interval: s.interval,
-      receivedAt: s.receivedAt.toISOString(),
-      raw: s.raw,
-    })),
-  );
+  res.json(rows.map(formatSignal));
 });
 
 router.get("/signals/:id", async (req, res) => {
@@ -119,19 +98,7 @@ router.get("/signals/:id", async (req, res) => {
     return;
   }
 
-  res.json({
-    id: signal.id,
-    ticker: signal.ticker,
-    action: signal.action,
-    price: signal.price != null ? Number(signal.price) : null,
-    quantity: signal.quantity != null ? Number(signal.quantity) : null,
-    strategy: signal.strategy,
-    message: signal.message,
-    exchange: signal.exchange,
-    interval: signal.interval,
-    receivedAt: signal.receivedAt.toISOString(),
-    raw: signal.raw,
-  });
+  res.json(formatSignal(signal));
 });
 
 export default router;

@@ -7,7 +7,6 @@
  */
 
 export * from './healthStatus';
-export * from './listSignalsAction';
 export * from './listSignalsParams';
 export * from './signalStats';
 export * from './signalStatsTickerBreakdownItem';
