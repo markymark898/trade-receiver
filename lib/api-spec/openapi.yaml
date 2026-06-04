@@ -1,22 +1,24 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Trade Request Receiver API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: webhook
+    description: Webhook ingestion
+  - name: signals
+    description: Trade signal management
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +26,177 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /webhook/tradingview:
+    post:
+      operationId: receiveTradingViewWebhook
+      tags: [webhook]
+      summary: Receive webhook from TradingView
+      description: >
+        Endpoint to paste into TradingView's alert webhook URL field.
+        Accepts the alert payload and stores it as a trade signal.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookPayload"
+      responses:
+        "200":
+          description: Signal received and stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TradeSignal"
+        "400":
+          description: Bad request
+
+  /signals:
+    get:
+      operationId: listSignals
+      tags: [signals]
+      summary: List all received trade signals
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: action
+          in: query
+          schema:
+            type: string
+            enum: [buy, sell, buy_long, sell_short, close_long, close_short]
+      responses:
+        "200":
+          description: List of signals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TradeSignal"
+
+  /signals/{id}:
+    get:
+      operationId: getSignal
+      tags: [signals]
+      summary: Get a single trade signal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Signal found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TradeSignal"
+        "404":
+          description: Not found
+
+  /signals/stats:
+    get:
+      operationId: getSignalStats
+      tags: [signals]
+      summary: Aggregated statistics about received signals
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignalStats"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    WebhookPayload:
+      type: object
+      properties:
+        ticker:
+          type: string
+          description: Trading pair or symbol, e.g. BTCUSDT
+        action:
+          type: string
+          description: Trade action, e.g. buy, sell, close_long
+        price:
+          type: ["number", "null"]
+          description: Price at signal time
+        quantity:
+          type: ["number", "null"]
+          description: Position size
+        strategy:
+          type: ["string", "null"]
+          description: Name of the TradingView strategy
+        message:
+          type: ["string", "null"]
+          description: Custom alert message text
+        exchange:
+          type: ["string", "null"]
+          description: Exchange name, e.g. BINANCE
+        interval:
+          type: ["string", "null"]
+          description: Chart interval, e.g. 1h, 4h, 1d
+
+    TradeSignal:
+      type: object
+      required: [id, ticker, action, receivedAt, raw]
+      properties:
+        id:
+          type: integer
+        ticker:
+          type: string
+        action:
+          type: string
+        price:
+          type: ["number", "null"]
+        quantity:
+          type: ["number", "null"]
+        strategy:
+          type: ["string", "null"]
+        message:
+          type: ["string", "null"]
+        exchange:
+          type: ["string", "null"]
+        interval:
+          type: ["string", "null"]
+        receivedAt:
+          type: string
+          format: date-time
+        raw:
+          type: object
+          description: Full raw payload as received
+
+    SignalStats:
+      type: object
+      required: [total, buys, sells, lastSignalAt, tickerBreakdown]
+      properties:
+        total:
+          type: integer
+        buys:
+          type: integer
+        sells:
+          type: integer
+        lastSignalAt:
+          type: ["string", "null"]
+          format: date-time
+        tickerBreakdown:
+          type: array
+          items:
+            type: object
+            required: [ticker, count]
+            properties:
+              ticker:
+                type: string
+              count:
+                type: integer

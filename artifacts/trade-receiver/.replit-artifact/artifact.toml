@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Trade Request Receiver"
+version = "1.0.0"
+id = "artifacts/trade-receiver"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22282
+
+[services.development]
+run = "pnpm --filter @workspace/trade-receiver run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/trade-receiver", "run", "build" ]
+publicDir = "artifacts/trade-receiver/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22282"
+BASE_PATH = "/"
