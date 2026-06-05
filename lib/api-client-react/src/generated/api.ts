@@ -22,9 +22,14 @@ import type {
 import type {
   ConnectionTestResult,
   Execution,
+  GuideAsset,
+  GuideAssetInput,
   HealthStatus,
   ListExecutionsParams,
+  ListGuideAssetsParams,
   ListSignalsParams,
+  RequestUploadUrlBody,
+  RequestUploadUrlResponse,
   Settings,
   SettingsInput,
   SignalStats,
@@ -807,5 +812,301 @@ export const useTestPublicConnection = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getTestPublicConnectionMutationOptions(options));
+    }
+
+export const getRequestUploadUrlUrl = () => {
+
+
+
+
+  return `/api/storage/uploads/request-url`
+}
+
+/**
+ * @summary Request a presigned upload URL
+ */
+export const requestUploadUrl = async (requestUploadUrlBody: RequestUploadUrlBody, options?: RequestInit): Promise<RequestUploadUrlResponse> => {
+
+  return customFetch<RequestUploadUrlResponse>(getRequestUploadUrlUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      requestUploadUrlBody,)
+  }
+);}
+
+
+
+
+export const getRequestUploadUrlMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestUploadUrl>>, TError,{data: BodyType<RequestUploadUrlBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestUploadUrl>>, TError,{data: BodyType<RequestUploadUrlBody>}, TContext> => {
+
+const mutationKey = ['requestUploadUrl'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestUploadUrl>>, {data: BodyType<RequestUploadUrlBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  requestUploadUrl(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof requestUploadUrl>>>
+    export type RequestUploadUrlMutationBody = BodyType<RequestUploadUrlBody>
+    export type RequestUploadUrlMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Request a presigned upload URL
+ */
+export const useRequestUploadUrl = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestUploadUrl>>, TError,{data: BodyType<RequestUploadUrlBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof requestUploadUrl>>,
+        TError,
+        {data: BodyType<RequestUploadUrlBody>},
+        TContext
+      > => {
+      return useMutation(getRequestUploadUrlMutationOptions(options));
+    }
+
+export const getListGuideAssetsUrl = (params?: ListGuideAssetsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/guide-assets?${stringifiedParams}` : `/api/guide-assets`
+}
+
+/**
+ * @summary List all uploaded guide assets
+ */
+export const listGuideAssets = async (params?: ListGuideAssetsParams, options?: RequestInit): Promise<GuideAsset[]> => {
+
+  return customFetch<GuideAsset[]>(getListGuideAssetsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListGuideAssetsQueryKey = (params?: ListGuideAssetsParams,) => {
+    return [
+    `/api/guide-assets`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListGuideAssetsQueryOptions = <TData = Awaited<ReturnType<typeof listGuideAssets>>, TError = ErrorType<unknown>>(params?: ListGuideAssetsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGuideAssets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListGuideAssetsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listGuideAssets>>> = ({ signal }) => listGuideAssets(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listGuideAssets>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListGuideAssetsQueryResult = NonNullable<Awaited<ReturnType<typeof listGuideAssets>>>
+export type ListGuideAssetsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all uploaded guide assets
+ */
+
+export function useListGuideAssets<TData = Awaited<ReturnType<typeof listGuideAssets>>, TError = ErrorType<unknown>>(
+ params?: ListGuideAssetsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGuideAssets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListGuideAssetsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateGuideAssetUrl = () => {
+
+
+
+
+  return `/api/guide-assets`
+}
+
+/**
+ * @summary Register an uploaded asset
+ */
+export const createGuideAsset = async (guideAssetInput: GuideAssetInput, options?: RequestInit): Promise<GuideAsset> => {
+
+  return customFetch<GuideAsset>(getCreateGuideAssetUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      guideAssetInput,)
+  }
+);}
+
+
+
+
+export const getCreateGuideAssetMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGuideAsset>>, TError,{data: BodyType<GuideAssetInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGuideAsset>>, TError,{data: BodyType<GuideAssetInput>}, TContext> => {
+
+const mutationKey = ['createGuideAsset'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGuideAsset>>, {data: BodyType<GuideAssetInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGuideAsset(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGuideAssetMutationResult = NonNullable<Awaited<ReturnType<typeof createGuideAsset>>>
+    export type CreateGuideAssetMutationBody = BodyType<GuideAssetInput>
+    export type CreateGuideAssetMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Register an uploaded asset
+ */
+export const useCreateGuideAsset = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGuideAsset>>, TError,{data: BodyType<GuideAssetInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGuideAsset>>,
+        TError,
+        {data: BodyType<GuideAssetInput>},
+        TContext
+      > => {
+      return useMutation(getCreateGuideAssetMutationOptions(options));
+    }
+
+export const getDeleteGuideAssetUrl = (id: number,) => {
+
+
+
+
+  return `/api/guide-assets/${id}`
+}
+
+/**
+ * @summary Delete a guide asset record
+ */
+export const deleteGuideAsset = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteGuideAssetUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteGuideAssetMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGuideAsset>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGuideAsset>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteGuideAsset'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGuideAsset>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteGuideAsset(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGuideAssetMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGuideAsset>>>
+
+    export type DeleteGuideAssetMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a guide asset record
+ */
+export const useDeleteGuideAsset = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGuideAsset>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGuideAsset>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteGuideAssetMutationOptions(options));
     }
 

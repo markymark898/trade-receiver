@@ -213,6 +213,44 @@ export interface SettingsInput {
   autoExecute?: boolean;
 }
 
+export interface RequestUploadUrlBody {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export interface RequestUploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+}
+
+export interface GuideAsset {
+  id: number;
+  name: string;
+  label: string;
+  /** @nullable */
+  description?: string | null;
+  objectPath: string;
+  contentType: string;
+  /** @nullable */
+  size?: number | null;
+  /** file | image */
+  assetType: string;
+  uploadedAt: string;
+}
+
+export interface GuideAssetInput {
+  name: string;
+  label: string;
+  /** @nullable */
+  description?: string | null;
+  objectPath: string;
+  contentType: string;
+  /** @nullable */
+  size?: number | null;
+  assetType: string;
+}
+
 export interface ConnectionTestResult {
   ok: boolean;
   /** @nullable */
@@ -233,4 +271,16 @@ action?: string;
 export type ListExecutionsParams = {
 limit?: number;
 };
+
+export type ListGuideAssetsParams = {
+assetType?: ListGuideAssetsAssetType;
+};
+
+export type ListGuideAssetsAssetType = typeof ListGuideAssetsAssetType[keyof typeof ListGuideAssetsAssetType];
+
+
+export const ListGuideAssetsAssetType = {
+  file: 'file',
+  image: 'image',
+} as const;
 

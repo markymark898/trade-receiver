@@ -8,9 +8,15 @@
 
 export * from './connectionTestResult';
 export * from './execution';
+export * from './guideAsset';
+export * from './guideAssetInput';
 export * from './healthStatus';
 export * from './listExecutionsParams';
+export * from './listGuideAssetsAssetType';
+export * from './listGuideAssetsParams';
 export * from './listSignalsParams';
+export * from './requestUploadUrlBody';
+export * from './requestUploadUrlResponse';
 export * from './settings';
 export * from './settingsInput';
 export * from './settingsInputInstrumentType';

@@ -12,6 +12,8 @@ tags:
   - name: signals
   - name: settings
   - name: executions
+  - name: storage
+  - name: guides
 paths:
   /healthz:
     get:
@@ -193,6 +195,78 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ConnectionTestResult"
+
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a presigned upload URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestUploadUrlBody"
+      responses:
+        "200":
+          description: Presigned upload URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestUploadUrlResponse"
+
+  /guide-assets:
+    get:
+      operationId: listGuideAssets
+      tags: [guides]
+      summary: List all uploaded guide assets
+      parameters:
+        - name: assetType
+          in: query
+          schema:
+            type: string
+            enum: [file, image]
+      responses:
+        "200":
+          description: List of guide assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GuideAsset"
+    post:
+      operationId: createGuideAsset
+      tags: [guides]
+      summary: Register an uploaded asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuideAssetInput"
+      responses:
+        "201":
+          description: Created asset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuideAsset"
+
+  /guide-assets/{id}:
+    delete:
+      operationId: deleteGuideAsset
+      tags: [guides]
+      summary: Delete a guide asset record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
 
 components:
   schemas:
@@ -401,6 +475,70 @@ components:
           enum: [DAY, GTC]
         autoExecute:
           type: boolean
+
+    RequestUploadUrlBody:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+        contentType:
+          type: string
+
+    RequestUploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
+          type: string
+
+    GuideAsset:
+      type: object
+      required: [id, name, label, objectPath, contentType, assetType, uploadedAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        label:
+          type: string
+        description:
+          type: ["string", "null"]
+        objectPath:
+          type: string
+        contentType:
+          type: string
+        size:
+          type: ["integer", "null"]
+        assetType:
+          type: string
+          description: "file | image"
+        uploadedAt:
+          type: string
+          format: date-time
+
+    GuideAssetInput:
+      type: object
+      required: [name, label, objectPath, contentType, assetType]
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        description:
+          type: ["string", "null"]
+        objectPath:
+          type: string
+        contentType:
+          type: string
+        size:
+          type: ["integer", "null"]
+        assetType:
+          type: string
 
     ConnectionTestResult:
       type: object

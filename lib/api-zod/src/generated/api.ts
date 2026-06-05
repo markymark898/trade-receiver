@@ -298,3 +298,61 @@ export const TestPublicConnectionResponse = zod.object({
 })
 
 
+/**
+ * @summary Request a presigned upload URL
+ */
+export const RequestUploadUrlBody = zod.object({
+  "name": zod.string(),
+  "size": zod.number(),
+  "contentType": zod.string()
+})
+
+export const RequestUploadUrlResponse = zod.object({
+  "uploadURL": zod.string(),
+  "objectPath": zod.string()
+})
+
+
+/**
+ * @summary List all uploaded guide assets
+ */
+export const ListGuideAssetsQueryParams = zod.object({
+  "assetType": zod.enum(['file', 'image']).optional()
+})
+
+export const ListGuideAssetsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "label": zod.string(),
+  "description": zod.string().nullish(),
+  "objectPath": zod.string(),
+  "contentType": zod.string(),
+  "size": zod.number().nullish(),
+  "assetType": zod.string().describe('file | image'),
+  "uploadedAt": zod.coerce.date()
+})
+export const ListGuideAssetsResponse = zod.array(ListGuideAssetsResponseItem)
+
+
+/**
+ * @summary Register an uploaded asset
+ */
+export const CreateGuideAssetBody = zod.object({
+  "name": zod.string(),
+  "label": zod.string(),
+  "description": zod.string().nullish(),
+  "objectPath": zod.string(),
+  "contentType": zod.string(),
+  "size": zod.number().nullish(),
+  "assetType": zod.string()
+})
+
+
+/**
+ * @summary Delete a guide asset record
+ */
+export const DeleteGuideAssetParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
