@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useListSignals, useGetSignalStats, getGetSignalStatsQueryKey, getListSignalsQueryKey } from "@workspace/api-client-react";
+import { useListSignals, useGetSignalStats, useListExecutions, getGetSignalStatsQueryKey, getListSignalsQueryKey, getListExecutionsQueryKey } from "@workspace/api-client-react";
 import { formatDistanceToNow, format } from "date-fns";
-import { Copy, Activity, TrendingUp, TrendingDown, Clock, Terminal, ChevronDown, ChevronUp } from "lucide-react";
+import { Copy, Activity, TrendingUp, TrendingDown, Clock, Terminal, ChevronDown, ChevronUp, Settings2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +43,16 @@ export default function Home() {
     { query: { queryKey: getListSignalsQueryKey({ limit: 50 }), refetchInterval: 5000 } }
   );
 
+  const { data: executions } = useListExecutions(
+    { limit: 50 },
+    { query: { queryKey: getListExecutionsQueryKey({ limit: 50 }), refetchInterval: 5000 } }
+  );
+
+  // Build a map of signalId -> execution status for quick lookup
+  const execBySignalId = new Map(
+    (executions ?? []).map((e) => [e.signalId, e])
+  );
+
   const webhookUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/api/webhook/tradingview`
@@ -76,14 +86,23 @@ export default function Home() {
       <div className="max-w-7xl mx-auto space-y-8">
 
         {/* Header */}
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <Terminal className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold tracking-tight text-foreground font-mono">TRD_REQ_RCVR</h1>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <Terminal className="w-8 h-8 text-primary" />
+              <h1 className="text-3xl font-bold tracking-tight text-foreground font-mono">TRD_REQ_RCVR</h1>
+            </div>
+            <p className="text-muted-foreground text-sm max-w-xl">
+              Live monitoring dashboard for TradingView webhook signals.
+            </p>
           </div>
-          <p className="text-muted-foreground text-sm max-w-xl">
-            Live monitoring dashboard for TradingView webhook signals.
-          </p>
+          <Link
+            href="/settings"
+            className="inline-flex items-center gap-2 rounded-md text-sm font-medium border border-input bg-white shadow-sm hover:bg-orange-50 hover:border-primary/30 h-9 px-4 py-2 shrink-0"
+          >
+            <Settings2 className="w-4 h-4 text-primary" />
+            Settings
+          </Link>
         </div>
 
         {/* Setup Card */}
@@ -249,7 +268,7 @@ export default function Home() {
                       <th className="px-6 py-4 font-mono font-medium text-right">PRICE</th>
                       <th className="px-6 py-4 font-mono font-medium text-right">SIZE</th>
                       <th className="px-6 py-4 font-mono font-medium">EXCHANGE</th>
-                      <th className="px-6 py-4 font-mono font-medium">INTERVAL</th>
+                      <th className="px-6 py-4 font-mono font-medium">ORDER</th>
                       <th className="px-6 py-4 font-mono font-medium text-right"></th>
                     </tr>
                   </thead>
@@ -291,8 +310,23 @@ export default function Home() {
                         <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
                           {signal.exchange ?? "—"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
-                          {signal.interval ?? "—"}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {(() => {
+                            const exec = execBySignalId.get(signal.id);
+                            if (!exec) return <span className="text-muted-foreground text-xs">—</span>;
+                            const styles: Record<string, string> = {
+                              submitted: "bg-blue-100 text-blue-700 border-blue-200",
+                              filled: "bg-green-100 text-green-700 border-green-200",
+                              failed: "bg-red-100 text-red-700 border-red-200",
+                              pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
+                              skipped: "bg-gray-100 text-gray-500 border-gray-200",
+                            };
+                            return (
+                              <Badge variant="outline" className={`font-mono text-xs uppercase ${styles[exec.status] ?? "bg-gray-100 text-gray-500"}`}>
+                                {exec.status}
+                              </Badge>
+                            );
+                          })()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <Link

@@ -17,32 +17,30 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * Endpoint to paste into TradingView's alert webhook URL field. Accepts the alert payload (JSON or plain text) and stores it as a trade signal.
-
  * @summary Receive webhook from TradingView
  */
 export const ReceiveTradingViewWebhookBody = zod.object({
-  "ticker": zod.string().nullish().describe('{{ticker}} — trading symbol e.g. BTCUSDT'),
-  "exchange": zod.string().nullish().describe('{{exchange}} — exchange name e.g. BINANCE'),
-  "interval": zod.string().nullish().describe('{{interval}} — chart timeframe e.g. 1h, 4h, 1D'),
-  "action": zod.string().nullish().describe('{{strategy.order.action}} — buy or sell'),
-  "price": zod.number().nullish().describe('{{close}} — close price at alert time'),
-  "open": zod.number().nullish().describe('{{open}} — open price of the bar'),
-  "high": zod.number().nullish().describe('{{high}} — high price of the bar'),
-  "low": zod.number().nullish().describe('{{low}} — low price of the bar'),
-  "volume": zod.number().nullish().describe('{{volume}} — bar volume'),
-  "time": zod.string().nullish().describe('{{time}} — UTC time when alert triggered (yyyy-MM-ddTHH:mm:ssZ)'),
-  "timenow": zod.string().nullish().describe('{{timenow}} — current fire time of the alert'),
-  "currency": zod.string().nullish().describe('{{syminfo.currency}} — quote currency e.g. USD'),
-  "basecurrency": zod.string().nullish().describe('{{syminfo.basecurrency}} — base currency e.g. BTC'),
-  "quantity": zod.number().nullish().describe('{{strategy.order.contracts}} — number of contracts'),
-  "strategy": zod.string().nullish().describe('Name of the strategy (custom field)\"'),
-  "message": zod.string().nullish().describe('Custom message text from the alert\"'),
-  "position_size": zod.number().nullish().describe('{{strategy.position_size}} — current position size'),
-  "order_price": zod.number().nullish().describe('{{strategy.order.price}} — fill price of the order'),
-  "order_id": zod.string().nullish().describe('{{strategy.order.id}} — order ID string'),
-  "order_comment": zod.string().nullish().describe('{{strategy.order.comment}} — order comment')
-}).describe('TradingView alert payload — all fields are optional and come from the alert message template')
+  "ticker": zod.string().nullish(),
+  "exchange": zod.string().nullish(),
+  "interval": zod.string().nullish(),
+  "action": zod.string().nullish(),
+  "price": zod.number().nullish(),
+  "open": zod.number().nullish(),
+  "high": zod.number().nullish(),
+  "low": zod.number().nullish(),
+  "volume": zod.number().nullish(),
+  "time": zod.string().nullish(),
+  "timenow": zod.string().nullish(),
+  "currency": zod.string().nullish(),
+  "basecurrency": zod.string().nullish(),
+  "quantity": zod.number().nullish(),
+  "strategy": zod.string().nullish(),
+  "message": zod.string().nullish(),
+  "position_size": zod.number().nullish(),
+  "order_price": zod.number().nullish(),
+  "order_id": zod.string().nullish(),
+  "order_comment": zod.string().nullish()
+})
 
 export const ReceiveTradingViewWebhookResponse = zod.object({
   "id": zod.number(),
@@ -60,7 +58,7 @@ export const ReceiveTradingViewWebhookResponse = zod.object({
   "interval": zod.string().nullish(),
   "currency": zod.string().nullish(),
   "basecurrency": zod.string().nullish(),
-  "alertTime": zod.string().nullish().describe('The {{time}} value from TradingView'),
+  "alertTime": zod.string().nullish(),
   "timenow": zod.string().nullish(),
   "positionSize": zod.number().nullish(),
   "orderPrice": zod.number().nullish(),
@@ -69,7 +67,20 @@ export const ReceiveTradingViewWebhookResponse = zod.object({
   "receivedAt": zod.coerce.date(),
   "raw": zod.object({
 
-}).passthrough().describe('Full raw payload as received')
+}).passthrough(),
+  "execution": zod.object({
+  "id": zod.number(),
+  "signalId": zod.number(),
+  "status": zod.string().describe('pending | submitted | filled | failed | skipped'),
+  "publicOrderId": zod.string().nullish(),
+  "orderType": zod.string().nullish(),
+  "side": zod.string().nullish(),
+  "quantity": zod.string().nullish(),
+  "limitPrice": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+}).optional().describe('Attached execution if available')
 })
 
 
@@ -99,7 +110,7 @@ export const ListSignalsResponseItem = zod.object({
   "interval": zod.string().nullish(),
   "currency": zod.string().nullish(),
   "basecurrency": zod.string().nullish(),
-  "alertTime": zod.string().nullish().describe('The {{time}} value from TradingView'),
+  "alertTime": zod.string().nullish(),
   "timenow": zod.string().nullish(),
   "positionSize": zod.number().nullish(),
   "orderPrice": zod.number().nullish(),
@@ -108,7 +119,20 @@ export const ListSignalsResponseItem = zod.object({
   "receivedAt": zod.coerce.date(),
   "raw": zod.object({
 
-}).passthrough().describe('Full raw payload as received')
+}).passthrough(),
+  "execution": zod.object({
+  "id": zod.number(),
+  "signalId": zod.number(),
+  "status": zod.string().describe('pending | submitted | filled | failed | skipped'),
+  "publicOrderId": zod.string().nullish(),
+  "orderType": zod.string().nullish(),
+  "side": zod.string().nullish(),
+  "quantity": zod.string().nullish(),
+  "limitPrice": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+}).optional().describe('Attached execution if available')
 })
 export const ListSignalsResponse = zod.array(ListSignalsResponseItem)
 
@@ -136,7 +160,7 @@ export const GetSignalResponse = zod.object({
   "interval": zod.string().nullish(),
   "currency": zod.string().nullish(),
   "basecurrency": zod.string().nullish(),
-  "alertTime": zod.string().nullish().describe('The {{time}} value from TradingView'),
+  "alertTime": zod.string().nullish(),
   "timenow": zod.string().nullish(),
   "positionSize": zod.number().nullish(),
   "orderPrice": zod.number().nullish(),
@@ -145,7 +169,20 @@ export const GetSignalResponse = zod.object({
   "receivedAt": zod.coerce.date(),
   "raw": zod.object({
 
-}).passthrough().describe('Full raw payload as received')
+}).passthrough(),
+  "execution": zod.object({
+  "id": zod.number(),
+  "signalId": zod.number(),
+  "status": zod.string().describe('pending | submitted | filled | failed | skipped'),
+  "publicOrderId": zod.string().nullish(),
+  "orderType": zod.string().nullish(),
+  "side": zod.string().nullish(),
+  "quantity": zod.string().nullish(),
+  "limitPrice": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+}).optional().describe('Attached execution if available')
 })
 
 
@@ -161,6 +198,103 @@ export const GetSignalStatsResponse = zod.object({
   "ticker": zod.string(),
   "count": zod.number()
 }))
+})
+
+
+/**
+ * @summary Get execution record for a signal
+ */
+export const GetSignalExecutionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetSignalExecutionResponse = zod.object({
+  "id": zod.number(),
+  "signalId": zod.number(),
+  "status": zod.string().describe('pending | submitted | filled | failed | skipped'),
+  "publicOrderId": zod.string().nullish(),
+  "orderType": zod.string().nullish(),
+  "side": zod.string().nullish(),
+  "quantity": zod.string().nullish(),
+  "limitPrice": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary List recent executions
+ */
+export const listExecutionsQueryLimitDefault = 50;
+
+export const ListExecutionsQueryParams = zod.object({
+  "limit": zod.coerce.number().default(listExecutionsQueryLimitDefault)
+})
+
+export const ListExecutionsResponseItem = zod.object({
+  "id": zod.number(),
+  "signalId": zod.number(),
+  "status": zod.string().describe('pending | submitted | filled | failed | skipped'),
+  "publicOrderId": zod.string().nullish(),
+  "orderType": zod.string().nullish(),
+  "side": zod.string().nullish(),
+  "quantity": zod.string().nullish(),
+  "limitPrice": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional()
+})
+export const ListExecutionsResponse = zod.array(ListExecutionsResponseItem)
+
+
+/**
+ * @summary Get current settings
+ */
+export const GetSettingsResponse = zod.object({
+  "publicAccountId": zod.string().nullish().describe('Public.com account ID'),
+  "hasApiToken": zod.boolean().optional().describe('Whether an API token is configured (token itself never returned)'),
+  "orderType": zod.enum(['MARKET', 'LIMIT']),
+  "instrumentType": zod.enum(['EQUITY', 'CRYPTO']),
+  "defaultQuantity": zod.string(),
+  "timeInForce": zod.enum(['DAY', 'GTC']),
+  "autoExecute": zod.boolean()
+})
+
+
+/**
+ * @summary Save settings
+ */
+export const UpdateSettingsBody = zod.object({
+  "publicApiToken": zod.string().nullish().describe('Public.com API token — pass null to keep existing'),
+  "publicAccountId": zod.string().nullish(),
+  "orderType": zod.enum(['MARKET', 'LIMIT']).optional(),
+  "instrumentType": zod.enum(['EQUITY', 'CRYPTO']).optional(),
+  "defaultQuantity": zod.string().optional(),
+  "timeInForce": zod.enum(['DAY', 'GTC']).optional(),
+  "autoExecute": zod.boolean().optional()
+})
+
+export const UpdateSettingsResponse = zod.object({
+  "publicAccountId": zod.string().nullish().describe('Public.com account ID'),
+  "hasApiToken": zod.boolean().optional().describe('Whether an API token is configured (token itself never returned)'),
+  "orderType": zod.enum(['MARKET', 'LIMIT']),
+  "instrumentType": zod.enum(['EQUITY', 'CRYPTO']),
+  "defaultQuantity": zod.string(),
+  "timeInForce": zod.enum(['DAY', 'GTC']),
+  "autoExecute": zod.boolean()
+})
+
+
+/**
+ * @summary Test Public.com API connection
+ */
+export const TestPublicConnectionResponse = zod.object({
+  "ok": zod.boolean(),
+  "accountId": zod.string().nullish(),
+  "accountType": zod.string().nullish(),
+  "buyingPower": zod.string().nullish(),
+  "error": zod.string().nullish()
 })
 
 

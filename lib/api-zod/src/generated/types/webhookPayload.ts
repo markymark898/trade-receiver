@@ -6,108 +6,45 @@
  * OpenAPI spec version: 0.1.0
  */
 
-/**
- * TradingView alert payload — all fields are optional and come from the alert message template
- */
 export interface WebhookPayload {
-  /**
-     * {{ticker}} — trading symbol e.g. BTCUSDT
-     * @nullable
-     */
+  /** @nullable */
   ticker?: string | null;
-  /**
-     * {{exchange}} — exchange name e.g. BINANCE
-     * @nullable
-     */
+  /** @nullable */
   exchange?: string | null;
-  /**
-     * {{interval}} — chart timeframe e.g. 1h, 4h, 1D
-     * @nullable
-     */
+  /** @nullable */
   interval?: string | null;
-  /**
-     * {{strategy.order.action}} — buy or sell
-     * @nullable
-     */
+  /** @nullable */
   action?: string | null;
-  /**
-     * {{close}} — close price at alert time
-     * @nullable
-     */
+  /** @nullable */
   price?: number | null;
-  /**
-     * {{open}} — open price of the bar
-     * @nullable
-     */
+  /** @nullable */
   open?: number | null;
-  /**
-     * {{high}} — high price of the bar
-     * @nullable
-     */
+  /** @nullable */
   high?: number | null;
-  /**
-     * {{low}} — low price of the bar
-     * @nullable
-     */
+  /** @nullable */
   low?: number | null;
-  /**
-     * {{volume}} — bar volume
-     * @nullable
-     */
+  /** @nullable */
   volume?: number | null;
-  /**
-     * {{time}} — UTC time when alert triggered (yyyy-MM-ddTHH:mm:ssZ)
-     * @nullable
-     */
+  /** @nullable */
   time?: string | null;
-  /**
-     * {{timenow}} — current fire time of the alert
-     * @nullable
-     */
+  /** @nullable */
   timenow?: string | null;
-  /**
-     * {{syminfo.currency}} — quote currency e.g. USD
-     * @nullable
-     */
+  /** @nullable */
   currency?: string | null;
-  /**
-     * {{syminfo.basecurrency}} — base currency e.g. BTC
-     * @nullable
-     */
+  /** @nullable */
   basecurrency?: string | null;
-  /**
-     * {{strategy.order.contracts}} — number of contracts
-     * @nullable
-     */
+  /** @nullable */
   quantity?: number | null;
-  /**
-     * Name of the strategy (custom field)"
-     * @nullable
-     */
+  /** @nullable */
   strategy?: string | null;
-  /**
-     * Custom message text from the alert"
-     * @nullable
-     */
+  /** @nullable */
   message?: string | null;
-  /**
-     * {{strategy.position_size}} — current position size
-     * @nullable
-     */
+  /** @nullable */
   position_size?: number | null;
-  /**
-     * {{strategy.order.price}} — fill price of the order
-     * @nullable
-     */
+  /** @nullable */
   order_price?: number | null;
-  /**
-     * {{strategy.order.id}} — order ID string
-     * @nullable
-     */
+  /** @nullable */
   order_id?: string | null;
-  /**
-     * {{strategy.order.comment}} — order comment
-     * @nullable
-     */
+  /** @nullable */
   order_comment?: string | null;
 }

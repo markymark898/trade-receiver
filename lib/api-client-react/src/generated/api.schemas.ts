@@ -9,116 +9,71 @@ export interface HealthStatus {
   status: string;
 }
 
-/**
- * TradingView alert payload — all fields are optional and come from the alert message template
- */
 export interface WebhookPayload {
-  /**
-     * {{ticker}} — trading symbol e.g. BTCUSDT
-     * @nullable
-     */
+  /** @nullable */
   ticker?: string | null;
-  /**
-     * {{exchange}} — exchange name e.g. BINANCE
-     * @nullable
-     */
+  /** @nullable */
   exchange?: string | null;
-  /**
-     * {{interval}} — chart timeframe e.g. 1h, 4h, 1D
-     * @nullable
-     */
+  /** @nullable */
   interval?: string | null;
-  /**
-     * {{strategy.order.action}} — buy or sell
-     * @nullable
-     */
+  /** @nullable */
   action?: string | null;
-  /**
-     * {{close}} — close price at alert time
-     * @nullable
-     */
+  /** @nullable */
   price?: number | null;
-  /**
-     * {{open}} — open price of the bar
-     * @nullable
-     */
+  /** @nullable */
   open?: number | null;
-  /**
-     * {{high}} — high price of the bar
-     * @nullable
-     */
+  /** @nullable */
   high?: number | null;
-  /**
-     * {{low}} — low price of the bar
-     * @nullable
-     */
+  /** @nullable */
   low?: number | null;
-  /**
-     * {{volume}} — bar volume
-     * @nullable
-     */
+  /** @nullable */
   volume?: number | null;
-  /**
-     * {{time}} — UTC time when alert triggered (yyyy-MM-ddTHH:mm:ssZ)
-     * @nullable
-     */
+  /** @nullable */
   time?: string | null;
-  /**
-     * {{timenow}} — current fire time of the alert
-     * @nullable
-     */
+  /** @nullable */
   timenow?: string | null;
-  /**
-     * {{syminfo.currency}} — quote currency e.g. USD
-     * @nullable
-     */
+  /** @nullable */
   currency?: string | null;
-  /**
-     * {{syminfo.basecurrency}} — base currency e.g. BTC
-     * @nullable
-     */
+  /** @nullable */
   basecurrency?: string | null;
-  /**
-     * {{strategy.order.contracts}} — number of contracts
-     * @nullable
-     */
+  /** @nullable */
   quantity?: number | null;
-  /**
-     * Name of the strategy (custom field)"
-     * @nullable
-     */
+  /** @nullable */
   strategy?: string | null;
-  /**
-     * Custom message text from the alert"
-     * @nullable
-     */
+  /** @nullable */
   message?: string | null;
-  /**
-     * {{strategy.position_size}} — current position size
-     * @nullable
-     */
+  /** @nullable */
   position_size?: number | null;
-  /**
-     * {{strategy.order.price}} — fill price of the order
-     * @nullable
-     */
+  /** @nullable */
   order_price?: number | null;
-  /**
-     * {{strategy.order.id}} — order ID string
-     * @nullable
-     */
+  /** @nullable */
   order_id?: string | null;
-  /**
-     * {{strategy.order.comment}} — order comment
-     * @nullable
-     */
+  /** @nullable */
   order_comment?: string | null;
 }
 
-/**
- * Full raw payload as received
- */
 export type TradeSignalRaw = { [key: string]: unknown };
+
+export interface Execution {
+  id: number;
+  signalId: number;
+  /** pending | submitted | filled | failed | skipped */
+  status: string;
+  /** @nullable */
+  publicOrderId?: string | null;
+  /** @nullable */
+  orderType?: string | null;
+  /** @nullable */
+  side?: string | null;
+  /** @nullable */
+  quantity?: string | null;
+  /** @nullable */
+  limitPrice?: string | null;
+  /** @nullable */
+  errorMessage?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
 
 export interface TradeSignal {
   id: number;
@@ -148,10 +103,7 @@ export interface TradeSignal {
   currency?: string | null;
   /** @nullable */
   basecurrency?: string | null;
-  /**
-     * The {{time}} value from TradingView
-     * @nullable
-     */
+  /** @nullable */
   alertTime?: string | null;
   /** @nullable */
   timenow?: string | null;
@@ -164,8 +116,9 @@ export interface TradeSignal {
   /** @nullable */
   orderComment?: string | null;
   receivedAt: string;
-  /** Full raw payload as received */
   raw: TradeSignalRaw;
+  /** Attached execution if available */
+  execution?: Execution;
 }
 
 export type SignalStatsTickerBreakdownItem = {
@@ -182,8 +135,102 @@ export interface SignalStats {
   tickerBreakdown: SignalStatsTickerBreakdownItem[];
 }
 
+export type SettingsOrderType = typeof SettingsOrderType[keyof typeof SettingsOrderType];
+
+
+export const SettingsOrderType = {
+  MARKET: 'MARKET',
+  LIMIT: 'LIMIT',
+} as const;
+
+export type SettingsInstrumentType = typeof SettingsInstrumentType[keyof typeof SettingsInstrumentType];
+
+
+export const SettingsInstrumentType = {
+  EQUITY: 'EQUITY',
+  CRYPTO: 'CRYPTO',
+} as const;
+
+export type SettingsTimeInForce = typeof SettingsTimeInForce[keyof typeof SettingsTimeInForce];
+
+
+export const SettingsTimeInForce = {
+  DAY: 'DAY',
+  GTC: 'GTC',
+} as const;
+
+export interface Settings {
+  /**
+     * Public.com account ID
+     * @nullable
+     */
+  publicAccountId?: string | null;
+  /** Whether an API token is configured (token itself never returned) */
+  hasApiToken?: boolean;
+  orderType: SettingsOrderType;
+  instrumentType: SettingsInstrumentType;
+  defaultQuantity: string;
+  timeInForce: SettingsTimeInForce;
+  autoExecute: boolean;
+}
+
+export type SettingsInputOrderType = typeof SettingsInputOrderType[keyof typeof SettingsInputOrderType];
+
+
+export const SettingsInputOrderType = {
+  MARKET: 'MARKET',
+  LIMIT: 'LIMIT',
+} as const;
+
+export type SettingsInputInstrumentType = typeof SettingsInputInstrumentType[keyof typeof SettingsInputInstrumentType];
+
+
+export const SettingsInputInstrumentType = {
+  EQUITY: 'EQUITY',
+  CRYPTO: 'CRYPTO',
+} as const;
+
+export type SettingsInputTimeInForce = typeof SettingsInputTimeInForce[keyof typeof SettingsInputTimeInForce];
+
+
+export const SettingsInputTimeInForce = {
+  DAY: 'DAY',
+  GTC: 'GTC',
+} as const;
+
+export interface SettingsInput {
+  /**
+     * Public.com API token — pass null to keep existing
+     * @nullable
+     */
+  publicApiToken?: string | null;
+  /** @nullable */
+  publicAccountId?: string | null;
+  orderType?: SettingsInputOrderType;
+  instrumentType?: SettingsInputInstrumentType;
+  defaultQuantity?: string;
+  timeInForce?: SettingsInputTimeInForce;
+  autoExecute?: boolean;
+}
+
+export interface ConnectionTestResult {
+  ok: boolean;
+  /** @nullable */
+  accountId?: string | null;
+  /** @nullable */
+  accountType?: string | null;
+  /** @nullable */
+  buyingPower?: string | null;
+  /** @nullable */
+  error?: string | null;
+}
+
 export type ListSignalsParams = {
 limit?: number;
 action?: string;
+};
+
+export type ListExecutionsParams = {
+limit?: number;
 };
 

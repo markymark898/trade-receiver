@@ -5,6 +5,7 @@
  * Trade Request Receiver API
  * OpenAPI spec version: 0.1.0
  */
+import type { Execution } from './execution';
 import type { TradeSignalRaw } from './tradeSignalRaw';
 
 export interface TradeSignal {
@@ -35,10 +36,7 @@ export interface TradeSignal {
   currency?: string | null;
   /** @nullable */
   basecurrency?: string | null;
-  /**
-     * The {{time}} value from TradingView
-     * @nullable
-     */
+  /** @nullable */
   alertTime?: string | null;
   /** @nullable */
   timenow?: string | null;
@@ -51,6 +49,7 @@ export interface TradeSignal {
   /** @nullable */
   orderComment?: string | null;
   receivedAt: Date;
-  /** Full raw payload as received */
   raw: TradeSignalRaw;
+  /** Attached execution if available */
+  execution?: Execution;
 }

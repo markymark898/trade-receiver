@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db, signalsTable } from "@workspace/db";
+import { placeOrderForSignal } from "../lib/public-com";
 
 const router = Router();
 
@@ -72,6 +73,14 @@ router.post("/webhook/tradingview", async (req, res) => {
   }
 
   res.json(formatSignal(signal));
+
+  // Fire-and-forget: attempt to place the order on Public.com
+  placeOrderForSignal(signal.id, {
+    ticker: signal.ticker,
+    action: signal.action,
+    price: signal.price != null ? Number(signal.price) : null,
+    quantity: signal.quantity != null ? Number(signal.quantity) : null,
+  }).catch(() => { /* errors logged inside */ });
 });
 
 export function formatSignal(s: typeof signalsTable.$inferSelect) {

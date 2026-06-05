@@ -6,8 +6,19 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './connectionTestResult';
+export * from './execution';
 export * from './healthStatus';
+export * from './listExecutionsParams';
 export * from './listSignalsParams';
+export * from './settings';
+export * from './settingsInput';
+export * from './settingsInputInstrumentType';
+export * from './settingsInputOrderType';
+export * from './settingsInputTimeInForce';
+export * from './settingsInstrumentType';
+export * from './settingsOrderType';
+export * from './settingsTimeInForce';
 export * from './signalStats';
 export * from './signalStatsTickerBreakdownItem';
 export * from './tradeSignal';

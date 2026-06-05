@@ -6,4 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type TradeSignalRaw = { [key: string]: unknown };
+export type ListExecutionsParams = {
+limit?: number;
+};
