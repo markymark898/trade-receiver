@@ -67,53 +67,54 @@
 }
 
 :root {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
-  --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+  --opaque-button-border-intensity: -9;
+  --elevate-1: rgba(0,0,0, .04);
+  --elevate-2: rgba(0,0,0, .09);
 
-  /* Deep dark terminal aesthetic */
-  --background: 220 10% 4%;
-  --foreground: 220 10% 90%;
-  --border: 220 10% 12%;
-  --card: 220 10% 6%;
-  --card-foreground: 220 10% 90%;
-  --card-border: 220 10% 12%;
+  /* Light minimal aesthetic with orange brand */
+  --background: 0 0% 98%;
+  --foreground: 222 47% 11%;
+  --border: 214 32% 91%;
   
-  --sidebar: 220 10% 6%;
-  --sidebar-foreground: 220 10% 90%;
-  --sidebar-border: 220 10% 12%;
-  --sidebar-primary: 210 100% 50%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --card-border: 214 32% 91%;
+  
+  --sidebar: 0 0% 98%;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-border: 240 5.9% 90%;
+  --sidebar-primary: 24 95% 53%; /* Orange */
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 10% 12%;
-  --sidebar-accent-foreground: 220 10% 90%;
-  --sidebar-ring: 210 100% 50%;
+  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-accent-foreground: 240 5.9% 10%;
+  --sidebar-ring: 24 95% 53%;
 
-  --popover: 220 10% 6%;
-  --popover-foreground: 220 10% 90%;
-  --popover-border: 220 10% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --popover-border: 214 32% 91%;
 
-  /* High contrast accents */
-  --primary: 210 100% 55%;
+  /* Orange primary */
+  --primary: 24 95% 53%;
   --primary-foreground: 0 0% 100%;
   
-  --secondary: 220 10% 15%;
-  --secondary-foreground: 220 10% 90%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
 
-  --muted: 220 10% 12%;
-  --muted-foreground: 220 10% 60%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
 
-  --accent: 220 10% 15%;
-  --accent-foreground: 220 10% 90%;
+  --accent: 24 95% 95%; /* Light orange accent */
+  --accent-foreground: 24 95% 30%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 220 10% 12%;
-  --ring: 210 100% 55%;
+  --input: 214 32% 91%;
+  --ring: 24 95% 53%;
   
-  --chart-1: 210 100% 55%;
+  --chart-1: 24 95% 53%;
   --chart-2: 142 71% 45%;
   --chart-3: 0 84% 60%;
   --chart-4: 43 100% 50%;
@@ -122,16 +123,16 @@
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: 'Space Mono', Menlo, monospace;
-  --radius: 0.25rem;
+  --radius: 0.5rem;
 
-  --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.5);
-  --shadow-xs: 0px 2px 4px 0px rgba(0,0,0,0.5);
-  --shadow-sm: 0px 4px 8px 0px rgba(0,0,0,0.5);
-  --shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
-  --shadow-md: 0px 16px 32px 0px rgba(0,0,0,0.5);
-  --shadow-lg: 0px 24px 48px 0px rgba(0,0,0,0.5);
-  --shadow-xl: 0px 32px 64px 0px rgba(0,0,0,0.5);
-  --shadow-2xl: 0px 48px 96px 0px rgba(0,0,0,0.5);
+  --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.05);
+  --shadow-xs: 0px 2px 4px 0px rgba(0,0,0,0.05);
+  --shadow-sm: 0px 4px 8px 0px rgba(0,0,0,0.05);
+  --shadow: 0px 8px 16px 0px rgba(0,0,0,0.05);
+  --shadow-md: 0px 16px 32px 0px rgba(0,0,0,0.05);
+  --shadow-lg: 0px 24px 48px 0px rgba(0,0,0,0.05);
+  --shadow-xl: 0px 32px 64px 0px rgba(0,0,0,0.05);
+  --shadow-2xl: 0px 48px 96px 0px rgba(0,0,0,0.05);
   
   --tracking-normal: 0em;
   --spacing: 0.25rem;
@@ -146,7 +147,6 @@
 }
 
 .dark {
-  /* Dark mode is the default and only theme */
 }
 
 @layer base {

@@ -66,9 +66,9 @@ export default function Home() {
 
   const getActionColor = (action: string) => {
     const lower = action.toLowerCase();
-    if (lower.includes("buy")) return "bg-green-500/10 text-green-500 border-green-500/20";
-    if (lower.includes("sell")) return "bg-red-500/10 text-red-500 border-red-500/20";
-    return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+    if (lower.includes("buy")) return "bg-green-100 text-green-700 border-green-200";
+    if (lower.includes("sell")) return "bg-red-100 text-red-700 border-red-200";
+    return "bg-yellow-100 text-yellow-700 border-yellow-200";
   };
 
   return (
@@ -79,7 +79,7 @@ export default function Home() {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <Terminal className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold tracking-tight text-white font-mono">TRD_REQ_RCVR</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground font-mono">TRD_REQ_RCVR</h1>
           </div>
           <p className="text-muted-foreground text-sm max-w-xl">
             Live monitoring dashboard for TradingView webhook signals.
@@ -87,9 +87,9 @@ export default function Home() {
         </div>
 
         {/* Setup Card */}
-        <Card className="border-primary/20 bg-card/80">
+        <Card className="bg-orange-50 border-orange-200 shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-mono text-muted-foreground tracking-widest uppercase">
+            <CardTitle className="text-sm font-mono text-orange-800 tracking-widest uppercase">
               TradingView Setup
             </CardTitle>
           </CardHeader>
@@ -97,14 +97,14 @@ export default function Home() {
 
             {/* Step 1 — Webhook URL */}
             <div className="space-y-2">
-              <p className="text-xs font-mono text-muted-foreground">
+              <p className="text-xs font-mono text-orange-900/80">
                 <span className="text-primary font-bold">STEP 1</span> — In TradingView, open your alert &rarr; Notifications tab &rarr; paste this into the <em>Webhook URL</em> field:
               </p>
-              <div className="bg-[#0a0d14] border border-border rounded-md p-3 flex items-center gap-3">
-                <code className="text-sm font-mono text-green-400 flex-1 break-all select-all">
+              <div className="bg-white border border-orange-200 shadow-sm rounded-md p-3 flex items-center gap-3">
+                <code className="text-sm font-mono text-gray-800 flex-1 break-all select-all">
                   {webhookUrl}
                 </code>
-                <Button size="sm" variant="secondary" onClick={copyWebhookUrl} className="shrink-0">
+                <Button size="sm" variant="secondary" onClick={copyWebhookUrl} className="shrink-0 bg-orange-100 text-orange-800 hover:bg-orange-200 border-0">
                   <Copy className="w-3.5 h-3.5 mr-1.5" />
                   Copy
                 </Button>
@@ -113,21 +113,21 @@ export default function Home() {
 
             {/* Step 2 — Message template */}
             <div className="space-y-2">
-              <p className="text-xs font-mono text-muted-foreground">
+              <p className="text-xs font-mono text-orange-900/80">
                 <span className="text-primary font-bold">STEP 2</span> — Paste this into the alert <em>Message</em> box. It uses TradingView placeholders that get filled in when the alert fires:
               </p>
-              <div className="bg-[#0a0d14] border border-border rounded-md overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 border-b border-border/60">
-                  <span className="text-xs font-mono text-muted-foreground">Alert Message Template</span>
+              <div className="bg-white border border-orange-200 shadow-sm rounded-md overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-orange-100 bg-orange-50/50">
+                  <span className="text-xs font-mono text-orange-800">Alert Message Template</span>
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant="secondary" onClick={copyTemplate} className="h-7 text-xs">
+                    <Button size="sm" variant="secondary" onClick={copyTemplate} className="h-7 text-xs bg-orange-100 text-orange-800 hover:bg-orange-200 border-0">
                       <Copy className="w-3 h-3 mr-1.5" />
                       Copy Template
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 text-xs text-muted-foreground"
+                      className="h-7 text-xs text-orange-700 hover:bg-orange-100 hover:text-orange-900"
                       onClick={() => setTemplateOpen((v) => !v)}
                     >
                       {templateOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -136,13 +136,13 @@ export default function Home() {
                   </div>
                 </div>
                 {templateOpen && (
-                  <pre className="p-4 text-xs font-mono text-blue-300 overflow-x-auto leading-relaxed">
+                  <pre className="p-4 text-xs font-mono text-gray-800 bg-gray-50 overflow-x-auto leading-relaxed border-t border-orange-100">
                     {TV_TEMPLATE}
                   </pre>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground/70 font-mono">
-                Note: strategy placeholders like <code className="text-yellow-500">{"{{strategy.order.action}}"}</code> only work in Strategy alerts, not indicator alerts. For indicator alerts, replace them with hard-coded values like <code className="text-yellow-500">"buy"</code>.
+              <p className="text-xs text-orange-800/60 font-mono">
+                Note: strategy placeholders like <code className="text-orange-700 font-bold bg-orange-100 px-1 rounded">{"{{strategy.order.action}}"}</code> only work in Strategy alerts, not indicator alerts. For indicator alerts, replace them with hard-coded values like <code className="text-orange-700 font-bold bg-orange-100 px-1 rounded">"buy"</code>.
               </p>
             </div>
 
@@ -151,7 +151,7 @@ export default function Home() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+          <Card className="bg-card shadow-sm border-border">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-muted-foreground">Total Signals</p>
@@ -160,50 +160,50 @@ export default function Home() {
               {statsLoading ? (
                 <Skeleton className="h-8 w-16" />
               ) : (
-                <p className="text-3xl font-mono font-bold text-white">{stats?.total ?? 0}</p>
+                <p className="text-3xl font-mono font-bold text-foreground">{stats?.total ?? 0}</p>
               )}
             </CardContent>
           </Card>
 
-          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+          <Card className="bg-card shadow-sm border-border">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-muted-foreground">Buy Signals</p>
-                <TrendingUp className="w-4 h-4 text-green-500" />
+                <TrendingUp className="w-4 h-4 text-primary" />
               </div>
               {statsLoading ? (
                 <Skeleton className="h-8 w-16" />
               ) : (
-                <p className="text-3xl font-mono font-bold text-green-500">{stats?.buys ?? 0}</p>
+                <p className="text-3xl font-mono font-bold text-green-600">{stats?.buys ?? 0}</p>
               )}
             </CardContent>
           </Card>
 
-          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+          <Card className="bg-card shadow-sm border-border">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-muted-foreground">Sell Signals</p>
-                <TrendingDown className="w-4 h-4 text-red-500" />
+                <TrendingDown className="w-4 h-4 text-primary" />
               </div>
               {statsLoading ? (
                 <Skeleton className="h-8 w-16" />
               ) : (
-                <p className="text-3xl font-mono font-bold text-red-500">{stats?.sells ?? 0}</p>
+                <p className="text-3xl font-mono font-bold text-red-600">{stats?.sells ?? 0}</p>
               )}
             </CardContent>
           </Card>
 
-          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+          <Card className="bg-card shadow-sm border-border">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-muted-foreground">Last Signal</p>
-                <Clock className="w-4 h-4 text-blue-400" />
+                <Clock className="w-4 h-4 text-primary" />
               </div>
               {statsLoading ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
                 <div className="h-9 flex items-center">
-                  <p className="text-lg font-mono text-white truncate">
+                  <p className="text-lg font-mono text-foreground truncate">
                     {stats?.lastSignalAt
                       ? formatDistanceToNow(new Date(stats.lastSignalAt), { addSuffix: true })
                       : "Never"}
@@ -217,13 +217,13 @@ export default function Home() {
         {/* Live Feed */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <h2 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
               Live Feed
             </h2>
           </div>
 
-          <Card className="border-border/50 bg-card overflow-hidden">
+          <Card className="border-border bg-card shadow-sm overflow-hidden">
             {signalsLoading ? (
               <div className="p-6 space-y-4">
                 {[1, 2, 3, 4, 5].map((i) => (
@@ -231,9 +231,9 @@ export default function Home() {
                 ))}
               </div>
             ) : !signals || signals.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-12 text-center border-dashed border-2 border-border/50 m-4 rounded-lg bg-background/50">
+              <div className="flex flex-col items-center justify-center p-12 text-center border-dashed border-2 border-border/50 m-4 rounded-lg bg-muted/50">
                 <Terminal className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
-                <h3 className="text-lg font-medium text-white mb-2">No signals received yet</h3>
+                <h3 className="text-lg font-medium text-foreground mb-2">No signals received yet</h3>
                 <p className="text-muted-foreground text-sm max-w-md">
                   Complete the setup steps above, then trigger a TradingView alert. Signals appear here automatically every 5 seconds.
                 </p>
@@ -241,21 +241,21 @@ export default function Home() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-muted-foreground bg-muted/30 border-b border-border">
+                  <thead className="text-xs text-muted-foreground bg-muted/50 border-b border-border">
                     <tr>
-                      <th className="px-6 py-4 font-mono font-normal">TIME</th>
-                      <th className="px-6 py-4 font-mono font-normal">TICKER</th>
-                      <th className="px-6 py-4 font-mono font-normal">ACTION</th>
-                      <th className="px-6 py-4 font-mono font-normal text-right">PRICE</th>
-                      <th className="px-6 py-4 font-mono font-normal text-right">SIZE</th>
-                      <th className="px-6 py-4 font-mono font-normal">EXCHANGE</th>
-                      <th className="px-6 py-4 font-mono font-normal">INTERVAL</th>
-                      <th className="px-6 py-4 font-mono font-normal text-right"></th>
+                      <th className="px-6 py-4 font-mono font-medium">TIME</th>
+                      <th className="px-6 py-4 font-mono font-medium">TICKER</th>
+                      <th className="px-6 py-4 font-mono font-medium">ACTION</th>
+                      <th className="px-6 py-4 font-mono font-medium text-right">PRICE</th>
+                      <th className="px-6 py-4 font-mono font-medium text-right">SIZE</th>
+                      <th className="px-6 py-4 font-mono font-medium">EXCHANGE</th>
+                      <th className="px-6 py-4 font-mono font-medium">INTERVAL</th>
+                      <th className="px-6 py-4 font-mono font-medium text-right"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border/50 font-mono">
+                  <tbody className="divide-y divide-border font-mono">
                     {signals.map((signal) => (
-                      <tr key={signal.id} className="hover:bg-muted/20 transition-colors group">
+                      <tr key={signal.id} className="hover:bg-orange-50/60 transition-colors group">
                         <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
                           <Tooltip>
                             <TooltipTrigger className="cursor-default">
@@ -266,18 +266,18 @@ export default function Home() {
                             </TooltipContent>
                           </Tooltip>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap font-bold text-white">
+                        <td className="px-6 py-4 whitespace-nowrap font-bold text-foreground">
                           {signal.ticker ?? "UNKNOWN"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Badge
                             variant="outline"
-                            className={`font-mono uppercase ${getActionColor(signal.action)}`}
+                            className={`font-mono uppercase font-bold ${getActionColor(signal.action)}`}
                           >
                             {signal.action ?? "UNKNOWN"}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-white">
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-foreground font-medium">
                           {signal.price != null
                             ? signal.price.toLocaleString(undefined, {
                                 minimumFractionDigits: 2,
@@ -297,7 +297,7 @@ export default function Home() {
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <Link
                             href={`/signals/${signal.id}`}
-                            className="text-primary hover:text-primary/80 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="text-primary hover:text-primary/80 opacity-0 group-hover:opacity-100 transition-opacity font-medium"
                           >
                             Details &rarr;
                           </Link>

@@ -5,17 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import SignalDetail from "@/pages/signal-detail";
-import { useEffect } from "react";
 
 const queryClient = new QueryClient();
-
-function ThemeSetter() {
-  useEffect(() => {
-    // Force dark mode
-    document.documentElement.classList.add('dark');
-  }, []);
-  return null;
-}
 
 function Router() {
   return (
@@ -30,7 +21,6 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeSetter />
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Router />
