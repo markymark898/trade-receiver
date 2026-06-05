@@ -24,3 +24,9 @@ id = "ALG9sDoxU-RgDW-LgxmP9"
 uri = "file://guides/segment-4-connecting-to-public.md"
 type = "text"
 title = "Segment 4 — Connecting to Public.com"
+
+[[outputs]]
+id = "dflFHHZ2tXJb6hstF8uoh"
+uri = "file://guides/SYMBOL-KEY.md"
+type = "text"
+title = "SYMBOL-KEY — Parser Reference"

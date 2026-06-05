@@ -1,40 +1,46 @@
+[PAGE:2|Building the Receiver App]
+
 # How to Create a Trading Bot with Public.com
 ## Segment 2: Building the Signal Receiver App
 
----
+[SECTION:What You're Building]
 
-### What You're Building
-
-The receiver app is a web application with two parts:
+The receiver app has two parts:
 
 1. **A backend API server** — receives POST requests from TradingView, stores signals in a database, and sends orders to your broker
 2. **A frontend dashboard** — a live-updating UI where you can see every incoming signal and its execution status
 
-The tech stack is: Node.js, Express, PostgreSQL, React, and TypeScript — all running in a pnpm monorepo. You do not need to understand all of this upfront. Your agentic coder handles the setup. You just need to know what to ask for.
+The tech stack is Node.js, Express, PostgreSQL, React, and TypeScript running in a pnpm monorepo. You do not need to understand all of this upfront. Your agentic coder handles the setup. You just need to paste the prompts below in order.
+
+[/SECTION]
 
 ---
 
-### Step 1 — Set Up Your Coding Environment
+[SECTION:Step 1 — Set Up Your Coding Environment]
+
+[STEP:1|Set Up Your Coding Environment]
 
 This guide is written for **Replit**, which gives you a cloud development environment, a built-in database, and one-click publishing. Create a free account at replit.com if you do not have one.
 
 1. Create a new Replit project
 2. Choose the **Node.js** template, or start blank
-3. Open the AI agent (Replit Agent) in your project
+3. Open the AI agent in your project
 
-You can use any agentic coder that can access your file system and run terminal commands — Cursor, Windsurf, or Claude Code also work. The prompts below are the same regardless of which tool you use.
+[TIP]
+You can use any agentic coder that can access your file system and run terminal commands — Cursor, Windsurf, or Claude Code also work. The prompts below are identical regardless of which tool you use.
+[/TIP]
+
+[/STEP]
+
+[/SECTION]
 
 ---
 
-### Step 2 — Prompt Your Agentic Coder to Scaffold the Project
+[SECTION:Step 2 — Prompt 1: Project Scaffold]
 
-Paste the following into your agentic coder to build the full project structure:
+[STEP:2|Paste Prompt 1 into Your Agentic Coder]
 
----
-
-**Prompt — Project Scaffold:**
-
-```
+[PROMPT:Project Scaffold]
 Create a pnpm monorepo project for a trading signal receiver app with the following structure:
 
 - lib/db — a shared database library using Drizzle ORM with PostgreSQL
@@ -48,15 +54,21 @@ The root package.json should have:
 - "typecheck:libs": "tsc --build"
 - "typecheck": runs typecheck:libs then typechecks each artifact
 
-Use TypeScript 5, Node.js 24, and strict mode. The api-server should log using pino. 
+Use TypeScript 5, Node.js 24, and strict mode. The api-server should log using pino.
 The database should connect via the DATABASE_URL environment variable.
-```
+[/PROMPT]
+
+[/STEP]
+
+[/SECTION]
 
 ---
 
-**Prompt — Database Schema:**
+[SECTION:Step 3 — Prompt 2: Database Schema]
 
-```
+[STEP:3|Paste Prompt 2 into Your Agentic Coder]
+
+[PROMPT:Database Schema]
 In lib/db/src/schema/, create the following tables using Drizzle ORM:
 
 1. signals — stores incoming TradingView webhook payloads:
@@ -82,13 +94,19 @@ In lib/db/src/schema/, create the following tables using Drizzle ORM:
 
 Export everything from lib/db/src/schema/index.ts and lib/db/src/index.ts.
 Run the schema push after creating it.
-```
+[/PROMPT]
+
+[/STEP]
+
+[/SECTION]
 
 ---
 
-**Prompt — OpenAPI Spec:**
+[SECTION:Step 4 — Prompt 3: API Spec]
 
-```
+[STEP:4|Paste Prompt 3 into Your Agentic Coder]
+
+[PROMPT:OpenAPI Spec]
 Create lib/api-spec/openapi.yaml defining these endpoints under /api:
 
 GET  /healthz                     — returns { status: string }
@@ -106,13 +124,19 @@ Define schemas for: TradeSignal (all signal fields), SignalStats, Execution,
 Settings (hasApiToken: bool instead of the actual token), SettingsInput, ConnectionTestResult.
 
 After creating the spec, run: pnpm --filter @workspace/api-spec run codegen
-```
+[/PROMPT]
+
+[/STEP]
+
+[/SECTION]
 
 ---
 
-**Prompt — Backend Routes:**
+[SECTION:Step 5 — Prompt 4: Backend Routes]
 
-```
+[STEP:5|Paste Prompt 4 into Your Agentic Coder]
+
+[PROMPT:Backend Routes and Public.com Integration]
 In artifacts/api-server/src/routes/, create:
 
 1. webhook.ts — POST /webhook/tradingview
@@ -130,7 +154,7 @@ In artifacts/api-server/src/routes/, create:
    - Never return the raw publicApiToken in GET /settings — return hasApiToken: boolean instead
    - POST /settings/test-connection calls GET /userapigateway/trading/{accountId}/portfolio/v2 on Public.com
 
-4. Create artifacts/api-server/src/lib/public-com.ts
+4. Create artifacts/api-server/src/lib/public-com.ts:
    - placeOrderForSignal(signalId, { ticker, action, price, quantity })
    - Reads settings from DB, checks autoExecute flag
    - POSTs to https://api.public.com/userapigateway/trading/{accountId}/order
@@ -139,13 +163,19 @@ In artifacts/api-server/src/routes/, create:
    - If no token configured, creates execution with status 'skipped'
 
 Also add express.text({ type: 'text/plain' }) middleware to app.ts so TradingView plain-text payloads are parsed.
-```
+[/PROMPT]
+
+[/STEP]
+
+[/SECTION]
 
 ---
 
-**Prompt — Frontend Dashboard:**
+[SECTION:Step 6 — Prompt 5: Frontend Dashboard]
 
-```
+[STEP:6|Paste Prompt 5 into Your Agentic Coder]
+
+[PROMPT:Frontend Dashboard]
 Build the artifacts/trade-receiver frontend with React, Vite, Tailwind CSS, and shadcn/ui.
 Use wouter for routing and @tanstack/react-query with the generated hooks from @workspace/api-client-react.
 
@@ -159,7 +189,7 @@ Pages:
    - Auto-refresh every 5 seconds using refetchInterval: 5000
 
 2. /signals/:id (Signal Detail) — Full detail view showing all signal fields,
-   OHLCV bar data section (if available), and raw JSON payload
+   OHLCV bar data section if available, and raw JSON payload
 
 3. /settings (Settings) — Form with:
    - API Token field (password input, masked, leave blank to keep existing)
@@ -174,43 +204,49 @@ Pages:
 
 Theme: white background, orange primary accent (#F97316), dark text.
 Order status badge colors: submitted=blue, filled=green, failed=red, pending=yellow, skipped=gray.
-```
+[/PROMPT]
+
+[/STEP]
+
+[/SECTION]
 
 ---
 
-### Step 3 — Deploy the App
+[SECTION:Step 7 — Deploy the App]
+
+[STEP:7|Deploy the App]
 
 Once your agentic coder has built everything:
 
 1. Click **Deploy** or **Publish** in your environment
-2. You will receive a permanent public URL, e.g. `https://my-trading-bot.replit.app`
-3. This is the domain TradingView will send webhooks to
-4. Your webhook URL will be: `https://my-trading-bot.replit.app/api/webhook/tradingview`
+2. You will receive a permanent public URL, for example:
 
-Copy that URL and go back to TradingView to paste it into your alert (covered in Segment 1).
+[COPY]
+https://my-trading-bot.replit.app
+[/COPY]
 
----
+3. Your webhook URL will be:
 
-### What the App Does End-to-End
+[COPY]
+https://my-trading-bot.replit.app/api/webhook/tradingview
+[/COPY]
 
-```
-TradingView alert fires
-        ↓
-POST /api/webhook/tradingview
-        ↓
-Signal stored in database
-        ↓
-Response sent back to TradingView (confirms receipt)
-        ↓
-placeOrderForSignal() fires in background
-        ↓
-Order sent to Public.com API
-        ↓
-Execution record updated (submitted / failed)
-        ↓
-Dashboard reflects new signal + order status within 5 seconds
-```
+Copy that URL and paste it into your TradingView alert (covered in Segment 1).
+
+[/STEP]
+
+[/SECTION]
 
 ---
 
-**Next:** Segment 3 covers the Public.com API — authentication, order types, account IDs, and how the trading side of the integration works.
+[SECTION:How It All Connects]
+
+[NOTE]
+End-to-end flow: TradingView alert fires → POST /api/webhook/tradingview → signal stored in database → response sent back to TradingView → placeOrderForSignal() fires in background → order sent to Public.com API → execution record updated → dashboard reflects new signal and order status within 5 seconds.
+[/NOTE]
+
+[/SECTION]
+
+[NAV:Segment 1 — TradingView Setup|Segment 3 — The Public.com API]
+
+[/PAGE]
