@@ -143,6 +143,40 @@ This document defines every symbol used in the four guide segments. Feed this to
 
 ---
 
+## Image / Screenshot
+
+[IMG:objectPath|Alt text]
+
+- Embeds an uploaded screenshot or image inline in the guide content
+- objectPath = the object path returned when the image was uploaded, e.g. /objects/abc123-def456
+- Alt text = descriptive label shown below the image and used as the HTML alt attribute
+- Render as: a full-width (or max-width-constrained) image block with the alt text shown as a caption beneath it
+- The image is served from: /api/storage/objects{objectPath}
+  Full URL example: /api/storage/objects/objects/abc123-def456
+- Images should be lazy-loaded and have a subtle border or shadow
+- On click, open the full-resolution image in a lightbox or new tab
+- Example usage in a guide file:
+  [IMG:/objects/abc123|TradingView alert notification tab showing webhook URL field]
+
+---
+
+## Downloadable File
+
+[DOWNLOAD:objectPath|Button label]
+
+- Renders a prominent download button for a file that was uploaded to the guide assets library
+- objectPath = the object path returned when the file was uploaded, e.g. /objects/abc123-def456
+- Button label = text shown on the download button, e.g. "Download Starter Pine Script"
+- Render as: a styled button or card with a download icon, the label text, and an href pointing to the file
+- The file is served from: /api/storage/objects{objectPath}
+  Full URL example: /api/storage/objects/objects/abc123-def456
+- The link should use the HTML download attribute so the browser saves rather than navigates
+- Optionally display the file size and type as secondary metadata if available
+- Example usage in a guide file:
+  [DOWNLOAD:/objects/abc123|Download Starter Pine Script (.pine)]
+
+---
+
 ## Navigation Bar
 
 [NAV:Prev Title|Next Title]
@@ -184,4 +218,24 @@ Render all standard markdown normally. The custom symbol blocks above layer on t
 | [TIP] / [/TIP] | Best practice callout | Green box + lightbulb icon |
 | [TABLE] / [/TABLE] | Styled data table | Striped HTML table, colored header |
 | [KEY]term[/KEY] | Inline code/key term | Monospace pill badge |
+| [IMG:path\|alt] | Embedded screenshot or image | Full-width image + caption + lightbox |
+| [DOWNLOAD:path\|label] | Downloadable file button | Download button/card + file icon |
 | [NAV:Prev\|Next] | Page navigation | Bottom bar with prev/next buttons |
+
+---
+
+## How Paths Work
+
+When a file or image is uploaded through the Guide Assets page, the server returns an objectPath like:
+
+```
+/objects/550e8400-e29b-41d4-a716-446655440000
+```
+
+To build the serving URL, prepend the storage endpoint:
+
+```
+/api/storage/objects/objects/550e8400-e29b-41d4-a716-446655440000
+```
+
+The Guide Assets page has a copy button next to every uploaded asset that copies the correct [IMG:...|...] or [DOWNLOAD:...|...] symbol for you automatically — you do not need to construct the path by hand.

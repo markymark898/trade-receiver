@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import SignalDetail from "@/pages/signal-detail";
 import Settings from "@/pages/settings";
+import Guides from "@/pages/guides";
 
 const queryClient = new QueryClient();
 
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/signals/:id" component={SignalDetail} />
       <Route path="/settings" component={Settings} />
+      <Route path="/guides" component={Guides} />
       <Route component={NotFound} />
     </Switch>
   );
