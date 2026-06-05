@@ -1,0 +1,26 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "G0Pjthf52dfrrBpofp9re"
+uri = "file://guides/segment-1-tradingview-setup.md"
+type = "text"
+title = "Segment 1 — TradingView Setup"
+
+[[outputs]]
+id = "wWPP-VfMr62mRBn-5kitv"
+uri = "file://guides/segment-2-building-the-app.md"
+type = "text"
+title = "Segment 2 — Building the App"
+
+[[outputs]]
+id = "3pRbL1lHz7Jo9qjcUIZpe"
+uri = "file://guides/segment-3-public-com-api.md"
+type = "text"
+title = "Segment 3 — The Public.com API"
+
+[[outputs]]
+id = "ALG9sDoxU-RgDW-LgxmP9"
+uri = "file://guides/segment-4-connecting-to-public.md"
+type = "text"
+title = "Segment 4 — Connecting to Public.com"
