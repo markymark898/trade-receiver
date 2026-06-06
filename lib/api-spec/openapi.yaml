@@ -516,6 +516,9 @@ components:
         buyFraction:
           type: string
           description: Fraction of defaultQuantity to use for buy orders (0.01–1.00)
+        neverSellAtLoss:
+          type: boolean
+          description: If true, sell orders are skipped when current price is below the tracked buy price
 
     SettingsInput:
       type: object
@@ -540,6 +543,8 @@ components:
           type: boolean
         buyFraction:
           type: string
+        neverSellAtLoss:
+          type: boolean
 
     Trade:
       type: object

@@ -10,6 +10,7 @@ export const settingsTable = pgTable("settings", {
   timeInForce: text("time_in_force").notNull().default("DAY"),
   autoExecute: boolean("auto_execute").notNull().default(true),
   buyFraction: numeric("buy_fraction").notNull().default("1"),
+  neverSellAtLoss: boolean("never_sell_at_loss").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

@@ -259,7 +259,8 @@ export const GetSettingsResponse = zod.object({
   "defaultQuantity": zod.string(),
   "timeInForce": zod.enum(['DAY', 'GTC']),
   "autoExecute": zod.boolean(),
-  "buyFraction": zod.string().optional().describe('Fraction of defaultQuantity to use for buy orders (0.01–1.00)')
+  "buyFraction": zod.string().optional().describe('Fraction of defaultQuantity to use for buy orders (0.01–1.00)'),
+  "neverSellAtLoss": zod.boolean().optional().describe('If true, sell orders are skipped when current price is below the tracked buy price')
 })
 
 
@@ -274,7 +275,8 @@ export const UpdateSettingsBody = zod.object({
   "defaultQuantity": zod.string().optional(),
   "timeInForce": zod.enum(['DAY', 'GTC']).optional(),
   "autoExecute": zod.boolean().optional(),
-  "buyFraction": zod.string().optional()
+  "buyFraction": zod.string().optional(),
+  "neverSellAtLoss": zod.boolean().optional()
 })
 
 export const UpdateSettingsResponse = zod.object({
@@ -285,7 +287,8 @@ export const UpdateSettingsResponse = zod.object({
   "defaultQuantity": zod.string(),
   "timeInForce": zod.enum(['DAY', 'GTC']),
   "autoExecute": zod.boolean(),
-  "buyFraction": zod.string().optional().describe('Fraction of defaultQuantity to use for buy orders (0.01–1.00)')
+  "buyFraction": zod.string().optional().describe('Fraction of defaultQuantity to use for buy orders (0.01–1.00)'),
+  "neverSellAtLoss": zod.boolean().optional().describe('If true, sell orders are skipped when current price is below the tracked buy price')
 })
 
 

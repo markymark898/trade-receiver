@@ -29,6 +29,7 @@ export default function Settings() {
   const [timeInForce, setTimeInForce] = useState<"DAY" | "GTC">("DAY");
   const [autoExecute, setAutoExecute] = useState(true);
   const [buyFraction, setBuyFraction] = useState("1");
+  const [neverSellAtLoss, setNeverSellAtLoss] = useState(false);
   const [showToken, setShowToken] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
@@ -40,6 +41,7 @@ export default function Settings() {
     setTimeInForce(settings.timeInForce as "DAY" | "GTC");
     setAutoExecute(settings.autoExecute);
     setBuyFraction(settings.buyFraction ?? "1");
+    setNeverSellAtLoss(settings.neverSellAtLoss ?? false);
     setInitialized(true);
   }
 
@@ -69,6 +71,7 @@ export default function Settings() {
         timeInForce,
         autoExecute,
         buyFraction,
+        neverSellAtLoss,
       },
     });
   };
@@ -314,11 +317,11 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="pt-2 border-t border-border">
-              <label className="flex items-center gap-3 cursor-pointer group">
+            <div className="pt-2 border-t border-border space-y-4">
+              <label className="flex items-center gap-3 cursor-pointer">
                 <div
                   onClick={() => setAutoExecute((v) => !v)}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${autoExecute ? "bg-primary" : "bg-muted-foreground/30"}`}
+                  className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${autoExecute ? "bg-primary" : "bg-muted-foreground/30"}`}
                 >
                   <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${autoExecute ? "translate-x-6" : "translate-x-1"}`} />
                 </div>
@@ -328,6 +331,23 @@ export default function Settings() {
                     {autoExecute
                       ? "Orders will be placed on Public.com automatically when a signal arrives"
                       : "Signals will be recorded but no orders will be placed"}
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <div
+                  onClick={() => setNeverSellAtLoss((v) => !v)}
+                  className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${neverSellAtLoss ? "bg-primary" : "bg-muted-foreground/30"}`}
+                >
+                  <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${neverSellAtLoss ? "translate-x-6" : "translate-x-1"}`} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Never sell at a loss</p>
+                  <p className="text-xs text-muted-foreground">
+                    {neverSellAtLoss
+                      ? "Sell signals are blocked if the current price is below your buy price — the trade stays open until it's profitable"
+                      : "All sell signals are executed regardless of whether the position is profitable"}
                   </p>
                 </div>
               </label>

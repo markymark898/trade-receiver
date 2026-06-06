@@ -123,6 +123,12 @@ async function trackTradeAndPlaceOrder(
       const pl = (price - buyPrice) * qty;
       const plPct = buyPrice > 0 ? ((price - buyPrice) / buyPrice) * 100 : 0;
 
+      // Never-sell-at-loss guard: skip the order if it would realize a loss
+      if (settings?.neverSellAtLoss && pl < 0) {
+        // Leave trade open — do not place an order
+        return;
+      }
+
       await db
         .update(tradesTable)
         .set({

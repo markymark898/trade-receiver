@@ -174,6 +174,8 @@ export interface Settings {
   autoExecute: boolean;
   /** Fraction of defaultQuantity to use for buy orders (0.01–1.00) */
   buyFraction?: string;
+  /** If true, sell orders are skipped when current price is below the tracked buy price */
+  neverSellAtLoss?: boolean;
 }
 
 export type SettingsInputOrderType = typeof SettingsInputOrderType[keyof typeof SettingsInputOrderType];
@@ -214,6 +216,7 @@ export interface SettingsInput {
   timeInForce?: SettingsInputTimeInForce;
   autoExecute?: boolean;
   buyFraction?: string;
+  neverSellAtLoss?: boolean;
 }
 
 export interface Trade {

@@ -25,6 +25,7 @@ export async function getSettings() {
     timeInForce: dbRow?.timeInForce ?? "DAY",
     autoExecute: dbRow?.autoExecute ?? true,
     buyFraction: dbRow?.buyFraction ?? "1",
+    neverSellAtLoss: dbRow?.neverSellAtLoss ?? false,
     updatedAt: dbRow?.updatedAt ?? new Date(),
   };
 }

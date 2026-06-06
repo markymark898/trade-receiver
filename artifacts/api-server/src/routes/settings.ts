@@ -18,6 +18,7 @@ router.get("/settings", async (_req, res) => {
     timeInForce: s?.timeInForce ?? "DAY",
     autoExecute: s?.autoExecute ?? true,
     buyFraction: s?.buyFraction ?? "1",
+    neverSellAtLoss: s?.neverSellAtLoss ?? false,
   });
 });
 
@@ -31,6 +32,7 @@ router.put("/settings", async (req, res) => {
     timeInForce?: string;
     autoExecute?: boolean;
     buyFraction?: string;
+    neverSellAtLoss?: boolean;
   };
 
   const existing = await getSettings();
@@ -43,6 +45,7 @@ router.put("/settings", async (req, res) => {
     timeInForce: body.timeInForce ?? existing?.timeInForce ?? "DAY",
     autoExecute: body.autoExecute ?? existing?.autoExecute ?? true,
     buyFraction: body.buyFraction ?? existing?.buyFraction ?? "1",
+    neverSellAtLoss: body.neverSellAtLoss ?? existing?.neverSellAtLoss ?? false,
     updatedAt: new Date(),
     // Only update token if explicitly provided (not null = clear, undefined = keep)
     ...(body.publicApiToken !== undefined
@@ -69,6 +72,7 @@ router.put("/settings", async (req, res) => {
     timeInForce: result?.timeInForce ?? "DAY",
     autoExecute: result?.autoExecute ?? true,
     buyFraction: result?.buyFraction ?? "1",
+    neverSellAtLoss: result?.neverSellAtLoss ?? false,
   });
 });
 
