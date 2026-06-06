@@ -8,6 +8,7 @@ import guideAssetsRouter from "./guide-assets";
 import portfolioRouter from "./portfolio";
 import authRouter from "./auth";
 import tradesRouter from "./trades";
+import strategiesRouter from "./strategies";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(storageRouter);
 router.use(guideAssetsRouter);
 router.use(portfolioRouter);
 router.use(tradesRouter);
+router.use(strategiesRouter);
 
 export default router;

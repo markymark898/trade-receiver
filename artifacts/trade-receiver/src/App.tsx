@@ -9,6 +9,7 @@ import SignalDetail from "@/pages/signal-detail";
 import Settings from "@/pages/settings";
 import Guides from "@/pages/guides";
 import Login from "@/pages/login";
+import Strategies from "@/pages/strategies";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/signals/:id" component={SignalDetail} />
       <Route path="/settings" component={Settings} />
       <Route path="/guides" component={Guides} />
+      <Route path="/strategies" component={Strategies} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useListSignals, useGetSignalStats, useListExecutions, useGetPortfolio, useListTrades, useGetTradeStats, getGetSignalStatsQueryKey, getListSignalsQueryKey, getListExecutionsQueryKey, getGetPortfolioQueryKey, getListTradesQueryKey, getGetTradeStatsQueryKey } from "@workspace/api-client-react";
 import { formatDistanceToNow, format } from "date-fns";
-import { Copy, Activity, TrendingUp, TrendingDown, Clock, Terminal, ChevronDown, ChevronUp, Settings2, BookOpen, Wallet, RefreshCw, AlertCircle, BarChart3 } from "lucide-react";
+import { Copy, Activity, TrendingUp, TrendingDown, Clock, Terminal, ChevronDown, ChevronUp, Settings2, BookOpen, Wallet, RefreshCw, AlertCircle, BarChart3, FlaskConical } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -123,6 +123,13 @@ export default function Home() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Link
+              href="/strategies"
+              className="inline-flex items-center gap-2 rounded-md text-sm font-medium border border-input bg-white shadow-sm hover:bg-orange-50 hover:border-primary/30 h-9 px-4 py-2 shrink-0"
+            >
+              <FlaskConical className="w-4 h-4 text-primary" />
+              Strategies
+            </Link>
             <Link
               href="/guides"
               className="inline-flex items-center gap-2 rounded-md text-sm font-medium border border-input bg-white shadow-sm hover:bg-orange-50 hover:border-primary/30 h-9 px-4 py-2 shrink-0"

@@ -9,6 +9,115 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary List all saved strategies with stats
+ */
+export const ListStrategiesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "ticker": zod.string().nullish(),
+  "signalTag": zod.string().nullish(),
+  "pineScript": zod.string().nullish(),
+  "alertMessageTemplate": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "stats": zod.object({
+  "pairs": zod.number(),
+  "wins": zod.number(),
+  "losses": zod.number(),
+  "totalPnL": zod.string(),
+  "winRate": zod.number(),
+  "signalCount": zod.number()
+}).optional()
+}))
+export const ListStrategiesResponse = zod.array(ListStrategiesResponseItem)
+
+
+/**
+ * @summary Create a new strategy
+ */
+export const CreateStrategyBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "ticker": zod.string().nullish(),
+  "signalTag": zod.string().nullish(),
+  "pineScript": zod.string().nullish(),
+  "alertMessageTemplate": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get a strategy with full P&L stats
+ */
+export const GetStrategyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetStrategyResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "ticker": zod.string().nullish(),
+  "signalTag": zod.string().nullish(),
+  "pineScript": zod.string().nullish(),
+  "alertMessageTemplate": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "stats": zod.object({
+  "pairs": zod.number(),
+  "wins": zod.number(),
+  "losses": zod.number(),
+  "totalPnL": zod.string(),
+  "winRate": zod.number(),
+  "signalCount": zod.number()
+}).optional()
+}))
+
+
+/**
+ * @summary Update a strategy
+ */
+export const UpdateStrategyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateStrategyBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "ticker": zod.string().nullish(),
+  "signalTag": zod.string().nullish(),
+  "pineScript": zod.string().nullish(),
+  "alertMessageTemplate": zod.string().nullish()
+})
+
+export const UpdateStrategyResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "ticker": zod.string().nullish(),
+  "signalTag": zod.string().nullish(),
+  "pineScript": zod.string().nullish(),
+  "alertMessageTemplate": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a strategy
+ */
+export const DeleteStrategyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteStrategyResponse = zod.object({
+  "ok": zod.boolean().optional()
+})
+
+
+/**
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({

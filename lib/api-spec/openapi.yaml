@@ -16,7 +16,104 @@ tags:
   - name: guides
   - name: portfolio
   - name: trades
+  - name: strategies
 paths:
+  /strategies:
+    get:
+      operationId: listStrategies
+      tags: [strategies]
+      summary: List all saved strategies with stats
+      responses:
+        "200":
+          description: List of strategies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StrategyWithStats"
+    post:
+      operationId: createStrategy
+      tags: [strategies]
+      summary: Create a new strategy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StrategyInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Strategy"
+
+  /strategies/{id}:
+    get:
+      operationId: getStrategy
+      tags: [strategies]
+      summary: Get a strategy with full P&L stats
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Strategy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StrategyWithStats"
+        "404":
+          description: Not found
+    put:
+      operationId: updateStrategy
+      tags: [strategies]
+      summary: Update a strategy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StrategyInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Strategy"
+    delete:
+      operationId: deleteStrategy
+      tags: [strategies]
+      summary: Delete a strategy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+
   /healthz:
     get:
       operationId: healthCheck
@@ -766,4 +863,71 @@ components:
         buyingPower:
           type: ["string", "null"]
         error:
+          type: ["string", "null"]
+
+    StrategyStats:
+      type: object
+      required: [pairs, wins, losses, totalPnL, winRate, signalCount]
+      properties:
+        pairs:
+          type: integer
+        wins:
+          type: integer
+        losses:
+          type: integer
+        totalPnL:
+          type: string
+        winRate:
+          type: integer
+        signalCount:
+          type: integer
+
+    Strategy:
+      type: object
+      required: [id, name, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        ticker:
+          type: ["string", "null"]
+        signalTag:
+          type: ["string", "null"]
+        pineScript:
+          type: ["string", "null"]
+        alertMessageTemplate:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    StrategyWithStats:
+      allOf:
+        - $ref: "#/components/schemas/Strategy"
+        - type: object
+          properties:
+            stats:
+              $ref: "#/components/schemas/StrategyStats"
+
+    StrategyInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        ticker:
+          type: ["string", "null"]
+        signalTag:
+          type: ["string", "null"]
+        pineScript:
+          type: ["string", "null"]
+        alertMessageTemplate:
           type: ["string", "null"]

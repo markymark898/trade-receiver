@@ -391,6 +391,54 @@ export interface ConnectionTestResult {
   error?: string | null;
 }
 
+export interface StrategyStats {
+  pairs: number;
+  wins: number;
+  losses: number;
+  totalPnL: string;
+  winRate: number;
+  signalCount: number;
+}
+
+export interface Strategy {
+  id: number;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  ticker?: string | null;
+  /** @nullable */
+  signalTag?: string | null;
+  /** @nullable */
+  pineScript?: string | null;
+  /** @nullable */
+  alertMessageTemplate?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type StrategyWithStats = Strategy & {
+  stats?: StrategyStats;
+};
+
+export interface StrategyInput {
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  ticker?: string | null;
+  /** @nullable */
+  signalTag?: string | null;
+  /** @nullable */
+  pineScript?: string | null;
+  /** @nullable */
+  alertMessageTemplate?: string | null;
+}
+
+export type DeleteStrategy200 = {
+  ok?: boolean;
+};
+
 export type ListSignalsParams = {
 limit?: number;
 action?: string;
