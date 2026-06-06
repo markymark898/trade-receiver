@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, tradesTable, signalsTable } from "@workspace/db";
-import { desc, asc, or, ilike } from "drizzle-orm";
+import { desc, asc } from "drizzle-orm";
 import { getSettings } from "../lib/public-com";
 
 const router = Router();
@@ -31,7 +31,12 @@ function formatTrade(t: typeof tradesTable.$inferSelect) {
  * This uses all historical signals so it never misses pairs even if the
  * trades table wasn't around when those signals arrived.
  */
+// Max number of non-buy/sell signals for the same ticker seen between an open buy
+// and a sell before the buy is considered "stale" and discarded.
+const STALE_INTERRUPTION_THRESHOLD = 5;
+
 async function computeSignalPnL(defaultQty: number) {
+  // Query ALL signals so we can count interruptions between buy/sell pairs
   const signals = await db
     .select({
       id: signalsTable.id,
@@ -41,36 +46,42 @@ async function computeSignalPnL(defaultQty: number) {
       receivedAt: signalsTable.receivedAt,
     })
     .from(signalsTable)
-    .where(
-      or(
-        ilike(signalsTable.action, "%buy%"),
-        ilike(signalsTable.action, "%sell%"),
-      )
-    )
     .orderBy(asc(signalsTable.receivedAt));
 
-  // One open position per ticker — a new buy replaces the previous entry
-  // (mirrors real single-position trading: you can't stack multiple open buys)
-  const openBuys = new Map<string, number>(); // ticker → last buy price
+  // Per-ticker: open buy price + count of non-buy/sell signals seen for that ticker since the buy.
+  // If interruptions exceed threshold the buy is stale and discarded.
+  const openBuys = new Map<string, { price: number; interruptions: number }>();
 
   const pairs: { pl: number; plPct: number }[] = [];
 
   for (const sig of signals) {
-    if (sig.price == null) continue;
-    const price = Number(sig.price);
     const action = sig.action.toLowerCase();
     const ticker = sig.ticker;
 
-    if (action.includes("buy")) {
-      // New buy opens (or re-enters) the position at this price
-      openBuys.set(ticker, price);
-    } else if (action.includes("sell")) {
-      const buyPrice = openBuys.get(ticker);
-      if (buyPrice != null) {
-        const pl = (price - buyPrice) * defaultQty;
-        const plPct = buyPrice > 0 ? ((price - buyPrice) / buyPrice) * 100 : 0;
+    if (action === "buy" && sig.price != null) {
+      // New buy opens (or re-enters) the position — reset interruption counter
+      openBuys.set(ticker, { price: Number(sig.price), interruptions: 0 });
+
+    } else if (action === "sell" && sig.price != null) {
+      const open = openBuys.get(ticker);
+      if (open != null) {
+        const price = Number(sig.price);
+        const pl = (price - open.price) * defaultQty;
+        const plPct = open.price > 0 ? ((price - open.price) / open.price) * 100 : 0;
         pairs.push({ pl, plPct });
         openBuys.delete(ticker); // position closed
+      }
+
+    } else {
+      // Non-buy/sell signal for this ticker — count as an interruption
+      const open = openBuys.get(ticker);
+      if (open != null) {
+        const next = open.interruptions + 1;
+        if (next > STALE_INTERRUPTION_THRESHOLD) {
+          openBuys.delete(ticker); // position went stale — too many other signals
+        } else {
+          openBuys.set(ticker, { ...open, interruptions: next });
+        }
       }
     }
   }
