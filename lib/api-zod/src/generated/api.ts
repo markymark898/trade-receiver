@@ -258,7 +258,8 @@ export const GetSettingsResponse = zod.object({
   "instrumentType": zod.enum(['EQUITY', 'CRYPTO']),
   "defaultQuantity": zod.string(),
   "timeInForce": zod.enum(['DAY', 'GTC']),
-  "autoExecute": zod.boolean()
+  "autoExecute": zod.boolean(),
+  "buyFraction": zod.string().optional().describe('Fraction of defaultQuantity to use for buy orders (0.01–1.00)')
 })
 
 
@@ -272,7 +273,8 @@ export const UpdateSettingsBody = zod.object({
   "instrumentType": zod.enum(['EQUITY', 'CRYPTO']).optional(),
   "defaultQuantity": zod.string().optional(),
   "timeInForce": zod.enum(['DAY', 'GTC']).optional(),
-  "autoExecute": zod.boolean().optional()
+  "autoExecute": zod.boolean().optional(),
+  "buyFraction": zod.string().optional()
 })
 
 export const UpdateSettingsResponse = zod.object({
@@ -282,7 +284,8 @@ export const UpdateSettingsResponse = zod.object({
   "instrumentType": zod.enum(['EQUITY', 'CRYPTO']),
   "defaultQuantity": zod.string(),
   "timeInForce": zod.enum(['DAY', 'GTC']),
-  "autoExecute": zod.boolean()
+  "autoExecute": zod.boolean(),
+  "buyFraction": zod.string().optional().describe('Fraction of defaultQuantity to use for buy orders (0.01–1.00)')
 })
 
 
@@ -350,6 +353,46 @@ export const CreateGuideAssetBody = zod.object({
   "contentType": zod.string(),
   "size": zod.number().nullish(),
   "assetType": zod.string()
+})
+
+
+/**
+ * @summary List all tracked trades
+ */
+export const listTradesQueryLimitDefault = 50;
+
+export const ListTradesQueryParams = zod.object({
+  "limit": zod.coerce.number().default(listTradesQueryLimitDefault)
+})
+
+export const ListTradesResponseItem = zod.object({
+  "id": zod.number(),
+  "ticker": zod.string(),
+  "buySignalId": zod.number().nullish(),
+  "sellSignalId": zod.number().nullish(),
+  "buyPrice": zod.string().nullish(),
+  "sellPrice": zod.string().nullish(),
+  "quantity": zod.string(),
+  "status": zod.string().describe('open | closed'),
+  "profitLoss": zod.string().nullish(),
+  "profitLossPct": zod.string().nullish(),
+  "openedAt": zod.coerce.date(),
+  "closedAt": zod.coerce.date().nullish()
+})
+export const ListTradesResponse = zod.array(ListTradesResponseItem)
+
+
+/**
+ * @summary Aggregated P&L and win-rate stats
+ */
+export const GetTradeStatsResponse = zod.object({
+  "totalTrades": zod.number(),
+  "openTrades": zod.number(),
+  "closedTrades": zod.number(),
+  "wins": zod.number(),
+  "losses": zod.number(),
+  "totalProfitLoss": zod.string(),
+  "winRate": zod.number()
 })
 
 

@@ -28,6 +28,7 @@ import type {
   ListExecutionsParams,
   ListGuideAssetsParams,
   ListSignalsParams,
+  ListTradesParams,
   Portfolio,
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
@@ -35,7 +36,9 @@ import type {
   SettingsInput,
   SignalStats,
   TestPublicConnectionBody,
+  Trade,
   TradeSignal,
+  TradeStats,
   WebhookPayload
 } from './api.schemas';
 
@@ -1042,6 +1045,167 @@ export const useCreateGuideAsset = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getCreateGuideAssetMutationOptions(options));
     }
+
+export const getListTradesUrl = (params?: ListTradesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/trades?${stringifiedParams}` : `/api/trades`
+}
+
+/**
+ * @summary List all tracked trades
+ */
+export const listTrades = async (params?: ListTradesParams, options?: RequestInit): Promise<Trade[]> => {
+
+  return customFetch<Trade[]>(getListTradesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTradesQueryKey = (params?: ListTradesParams,) => {
+    return [
+    `/api/trades`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListTradesQueryOptions = <TData = Awaited<ReturnType<typeof listTrades>>, TError = ErrorType<unknown>>(params?: ListTradesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrades>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTradesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrades>>> = ({ signal }) => listTrades(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrades>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTradesQueryResult = NonNullable<Awaited<ReturnType<typeof listTrades>>>
+export type ListTradesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all tracked trades
+ */
+
+export function useListTrades<TData = Awaited<ReturnType<typeof listTrades>>, TError = ErrorType<unknown>>(
+ params?: ListTradesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrades>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTradesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetTradeStatsUrl = () => {
+
+
+
+
+  return `/api/trades/stats`
+}
+
+/**
+ * @summary Aggregated P&L and win-rate stats
+ */
+export const getTradeStats = async ( options?: RequestInit): Promise<TradeStats> => {
+
+  return customFetch<TradeStats>(getGetTradeStatsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTradeStatsQueryKey = () => {
+    return [
+    `/api/trades/stats`
+    ] as const;
+    }
+
+
+export const getGetTradeStatsQueryOptions = <TData = Awaited<ReturnType<typeof getTradeStats>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTradeStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTradeStatsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTradeStats>>> = ({ signal }) => getTradeStats({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTradeStats>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTradeStatsQueryResult = NonNullable<Awaited<ReturnType<typeof getTradeStats>>>
+export type GetTradeStatsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Aggregated P&L and win-rate stats
+ */
+
+export function useGetTradeStats<TData = Awaited<ReturnType<typeof getTradeStats>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTradeStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTradeStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetPortfolioUrl = () => {
 

@@ -15,6 +15,7 @@ tags:
   - name: storage
   - name: guides
   - name: portfolio
+  - name: trades
 paths:
   /healthz:
     get:
@@ -265,6 +266,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/GuideAsset"
 
+  /trades:
+    get:
+      operationId: listTrades
+      tags: [trades]
+      summary: List all tracked trades
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: List of trades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trade"
+
+  /trades/stats:
+    get:
+      operationId: getTradeStats
+      tags: [trades]
+      summary: Aggregated P&L and win-rate stats
+      responses:
+        "200":
+          description: Trade statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TradeStats"
+
   /portfolio:
     get:
       operationId: getPortfolio
@@ -478,6 +513,9 @@ components:
           enum: [DAY, GTC]
         autoExecute:
           type: boolean
+        buyFraction:
+          type: string
+          description: Fraction of defaultQuantity to use for buy orders (0.01–1.00)
 
     SettingsInput:
       type: object
@@ -500,6 +538,59 @@ components:
           enum: [DAY, GTC]
         autoExecute:
           type: boolean
+        buyFraction:
+          type: string
+
+    Trade:
+      type: object
+      required: [id, ticker, quantity, status, openedAt]
+      properties:
+        id:
+          type: integer
+        ticker:
+          type: string
+        buySignalId:
+          type: ["integer", "null"]
+        sellSignalId:
+          type: ["integer", "null"]
+        buyPrice:
+          type: ["string", "null"]
+        sellPrice:
+          type: ["string", "null"]
+        quantity:
+          type: string
+        status:
+          type: string
+          description: "open | closed"
+        profitLoss:
+          type: ["string", "null"]
+        profitLossPct:
+          type: ["string", "null"]
+        openedAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    TradeStats:
+      type: object
+      required: [totalTrades, openTrades, closedTrades, wins, losses, totalProfitLoss, winRate]
+      properties:
+        totalTrades:
+          type: integer
+        openTrades:
+          type: integer
+        closedTrades:
+          type: integer
+        wins:
+          type: integer
+        losses:
+          type: integer
+        totalProfitLoss:
+          type: string
+        winRate:
+          type: number
 
     RequestUploadUrlBody:
       type: object

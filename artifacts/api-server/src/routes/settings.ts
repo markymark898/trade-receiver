@@ -17,6 +17,7 @@ router.get("/settings", async (_req, res) => {
     defaultQuantity: s?.defaultQuantity ?? "1",
     timeInForce: s?.timeInForce ?? "DAY",
     autoExecute: s?.autoExecute ?? true,
+    buyFraction: s?.buyFraction ?? "1",
   });
 });
 
@@ -29,6 +30,7 @@ router.put("/settings", async (req, res) => {
     defaultQuantity?: string;
     timeInForce?: string;
     autoExecute?: boolean;
+    buyFraction?: string;
   };
 
   const existing = await getSettings();
@@ -40,6 +42,7 @@ router.put("/settings", async (req, res) => {
     defaultQuantity: body.defaultQuantity ?? existing?.defaultQuantity ?? "1",
     timeInForce: body.timeInForce ?? existing?.timeInForce ?? "DAY",
     autoExecute: body.autoExecute ?? existing?.autoExecute ?? true,
+    buyFraction: body.buyFraction ?? existing?.buyFraction ?? "1",
     updatedAt: new Date(),
     // Only update token if explicitly provided (not null = clear, undefined = keep)
     ...(body.publicApiToken !== undefined
@@ -65,6 +68,7 @@ router.put("/settings", async (req, res) => {
     defaultQuantity: result?.defaultQuantity ?? "1",
     timeInForce: result?.timeInForce ?? "DAY",
     autoExecute: result?.autoExecute ?? true,
+    buyFraction: result?.buyFraction ?? "1",
   });
 });
 

@@ -172,6 +172,8 @@ export interface Settings {
   defaultQuantity: string;
   timeInForce: SettingsTimeInForce;
   autoExecute: boolean;
+  /** Fraction of defaultQuantity to use for buy orders (0.01–1.00) */
+  buyFraction?: string;
 }
 
 export type SettingsInputOrderType = typeof SettingsInputOrderType[keyof typeof SettingsInputOrderType];
@@ -211,6 +213,40 @@ export interface SettingsInput {
   defaultQuantity?: string;
   timeInForce?: SettingsInputTimeInForce;
   autoExecute?: boolean;
+  buyFraction?: string;
+}
+
+export interface Trade {
+  id: number;
+  ticker: string;
+  /** @nullable */
+  buySignalId?: number | null;
+  /** @nullable */
+  sellSignalId?: number | null;
+  /** @nullable */
+  buyPrice?: string | null;
+  /** @nullable */
+  sellPrice?: string | null;
+  quantity: string;
+  /** open | closed */
+  status: string;
+  /** @nullable */
+  profitLoss?: string | null;
+  /** @nullable */
+  profitLossPct?: string | null;
+  openedAt: string;
+  /** @nullable */
+  closedAt?: string | null;
+}
+
+export interface TradeStats {
+  totalTrades: number;
+  openTrades: number;
+  closedTrades: number;
+  wins: number;
+  losses: number;
+  totalProfitLoss: string;
+  winRate: number;
 }
 
 export interface RequestUploadUrlBody {
@@ -319,4 +355,8 @@ export const ListGuideAssetsAssetType = {
   file: 'file',
   image: 'image',
 } as const;
+
+export type ListTradesParams = {
+limit?: number;
+};
 

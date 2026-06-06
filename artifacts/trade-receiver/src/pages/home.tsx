@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useListSignals, useGetSignalStats, useListExecutions, useGetPortfolio, getGetSignalStatsQueryKey, getListSignalsQueryKey, getListExecutionsQueryKey, getGetPortfolioQueryKey } from "@workspace/api-client-react";
+import { useListSignals, useGetSignalStats, useListExecutions, useGetPortfolio, useListTrades, useGetTradeStats, getGetSignalStatsQueryKey, getListSignalsQueryKey, getListExecutionsQueryKey, getGetPortfolioQueryKey, getListTradesQueryKey, getGetTradeStatsQueryKey } from "@workspace/api-client-react";
 import { formatDistanceToNow, format } from "date-fns";
-import { Copy, Activity, TrendingUp, TrendingDown, Clock, Terminal, ChevronDown, ChevronUp, Settings2, BookOpen, Wallet, RefreshCw, AlertCircle } from "lucide-react";
+import { Copy, Activity, TrendingUp, TrendingDown, Clock, Terminal, ChevronDown, ChevronUp, Settings2, BookOpen, Wallet, RefreshCw, AlertCircle, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +57,15 @@ export default function Home() {
 
   const { data: portfolio, isLoading: portfolioLoading } = useGetPortfolio({
     query: { queryKey: getGetPortfolioQueryKey(), refetchInterval: 30000 },
+  });
+
+  const { data: trades, isLoading: tradesLoading } = useListTrades(
+    { limit: 50 },
+    { query: { queryKey: getListTradesQueryKey({ limit: 50 }), refetchInterval: 5000 } }
+  );
+
+  const { data: tradeStats } = useGetTradeStats({
+    query: { queryKey: getGetTradeStatsQueryKey(), refetchInterval: 5000 },
   });
 
   const refreshPortfolio = async () => {
@@ -397,6 +406,123 @@ export default function Home() {
               )}
             </>
           )}
+        </div>
+
+        {/* P&L Tracker */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-primary" />
+            P&amp;L Tracker
+          </h2>
+
+          {/* Stats Row */}
+          {tradeStats && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {(() => {
+                const pnl = Number(tradeStats.totalProfitLoss);
+                const isPos = pnl >= 0;
+                return (
+                  <Card className={`border shadow-sm ${isPos ? "border-green-200 bg-green-50/40" : "border-red-200 bg-red-50/40"}`}>
+                    <CardContent className="p-4">
+                      <p className="text-xs font-mono tracking-widest text-muted-foreground uppercase mb-1">Total P&amp;L</p>
+                      <p className={`text-2xl font-mono font-bold ${isPos ? "text-green-700" : "text-red-600"}`}>
+                        {isPos ? "+" : ""}${pnl.toFixed(2)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+              <Card className="border-border shadow-sm">
+                <CardContent className="p-4">
+                  <p className="text-xs font-mono tracking-widest text-muted-foreground uppercase mb-1">Win Rate</p>
+                  <p className="text-2xl font-mono font-bold text-foreground">{tradeStats.winRate}%</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{tradeStats.wins}W / {tradeStats.losses}L</p>
+                </CardContent>
+              </Card>
+              <Card className="border-border shadow-sm">
+                <CardContent className="p-4">
+                  <p className="text-xs font-mono tracking-widest text-muted-foreground uppercase mb-1">Open Trades</p>
+                  <p className="text-2xl font-mono font-bold text-primary">{tradeStats.openTrades}</p>
+                </CardContent>
+              </Card>
+              <Card className="border-border shadow-sm">
+                <CardContent className="p-4">
+                  <p className="text-xs font-mono tracking-widest text-muted-foreground uppercase mb-1">Closed Trades</p>
+                  <p className="text-2xl font-mono font-bold text-foreground">{tradeStats.closedTrades}</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Trades Table */}
+          <Card className="border-border bg-card shadow-sm overflow-hidden">
+            {tradesLoading ? (
+              <div className="p-6 space-y-3">
+                {[1, 2, 3].map((i) => <div key={i} className="h-10 bg-muted/50 rounded animate-pulse" />)}
+              </div>
+            ) : !trades || trades.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-10 text-center">
+                <BarChart3 className="w-10 h-10 text-muted-foreground mb-3 opacity-40" />
+                <p className="text-sm text-muted-foreground">No trades tracked yet. P&amp;L is recorded automatically from buy/sell signal pairs.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-muted-foreground bg-muted/50 border-b border-border">
+                    <tr>
+                      <th className="px-5 py-3 font-mono font-medium">TICKER</th>
+                      <th className="px-5 py-3 font-mono font-medium">STATUS</th>
+                      <th className="px-5 py-3 font-mono font-medium text-right">BUY</th>
+                      <th className="px-5 py-3 font-mono font-medium text-right">SELL</th>
+                      <th className="px-5 py-3 font-mono font-medium text-right">QTY</th>
+                      <th className="px-5 py-3 font-mono font-medium text-right">P&amp;L</th>
+                      <th className="px-5 py-3 font-mono font-medium text-right">%</th>
+                      <th className="px-5 py-3 font-mono font-medium">OPENED</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border font-mono">
+                    {trades.map((trade) => {
+                      const pl = trade.profitLoss != null ? Number(trade.profitLoss) : null;
+                      const plPct = trade.profitLossPct != null ? Number(trade.profitLossPct) : null;
+                      const isWin = pl != null && pl > 0;
+                      const isLoss = pl != null && pl < 0;
+                      return (
+                        <tr key={trade.id} className="hover:bg-orange-50/40 transition-colors">
+                          <td className="px-5 py-3 font-bold text-foreground">{trade.ticker}</td>
+                          <td className="px-5 py-3">
+                            <Badge
+                              variant="outline"
+                              className={trade.status === "open"
+                                ? "bg-orange-50 text-orange-700 border-orange-200 uppercase"
+                                : "bg-gray-50 text-gray-500 border-gray-200 uppercase"}
+                            >
+                              {trade.status}
+                            </Badge>
+                          </td>
+                          <td className="px-5 py-3 text-right text-foreground">
+                            {trade.buyPrice != null ? `$${Number(trade.buyPrice).toFixed(4)}` : "—"}
+                          </td>
+                          <td className="px-5 py-3 text-right text-muted-foreground">
+                            {trade.sellPrice != null ? `$${Number(trade.sellPrice).toFixed(4)}` : "—"}
+                          </td>
+                          <td className="px-5 py-3 text-right text-muted-foreground">{Number(trade.quantity).toLocaleString()}</td>
+                          <td className={`px-5 py-3 text-right font-bold ${isWin ? "text-green-600" : isLoss ? "text-red-500" : "text-muted-foreground"}`}>
+                            {pl != null ? `${pl >= 0 ? "+" : ""}$${pl.toFixed(2)}` : "—"}
+                          </td>
+                          <td className={`px-5 py-3 text-right ${isWin ? "text-green-600" : isLoss ? "text-red-500" : "text-muted-foreground"}`}>
+                            {plPct != null ? `${plPct >= 0 ? "+" : ""}${plPct.toFixed(2)}%` : "—"}
+                          </td>
+                          <td className="px-5 py-3 text-muted-foreground text-xs">
+                            {formatDistanceToNow(new Date(trade.openedAt), { addSuffix: true })}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
         </div>
 
         {/* Live Feed */}

@@ -28,10 +28,10 @@ export default function Settings() {
   const [defaultQuantity, setDefaultQuantity] = useState("1");
   const [timeInForce, setTimeInForce] = useState<"DAY" | "GTC">("DAY");
   const [autoExecute, setAutoExecute] = useState(true);
+  const [buyFraction, setBuyFraction] = useState("1");
   const [showToken, setShowToken] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
-  // Initialize form from loaded settings (once)
   if (settings && !initialized) {
     setAccountId(settings.publicAccountId ?? "");
     setOrderType(settings.orderType as "MARKET" | "LIMIT");
@@ -39,6 +39,7 @@ export default function Settings() {
     setDefaultQuantity(settings.defaultQuantity);
     setTimeInForce(settings.timeInForce as "DAY" | "GTC");
     setAutoExecute(settings.autoExecute);
+    setBuyFraction(settings.buyFraction ?? "1");
     setInitialized(true);
   }
 
@@ -47,7 +48,7 @@ export default function Settings() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetSettingsQueryKey() });
         toast({ title: "Settings saved", description: "Your configuration has been updated." });
-        setApiToken(""); // clear after save
+        setApiToken("");
       },
       onError: () => {
         toast({ title: "Save failed", description: "Could not save settings.", variant: "destructive" });
@@ -67,6 +68,7 @@ export default function Settings() {
         defaultQuantity,
         timeInForce,
         autoExecute,
+        buyFraction,
       },
     });
   };
@@ -79,6 +81,9 @@ export default function Settings() {
       },
     });
   };
+
+  const fractionPct = Math.round(Number(buyFraction) * 100);
+  const buyQty = (Number(defaultQuantity) * Number(buyFraction)).toFixed(3).replace(/\.?0+$/, "");
 
   if (isLoading) {
     return (
@@ -175,7 +180,6 @@ export default function Settings() {
               </p>
             </div>
 
-            {/* Test connection */}
             {settings?.hasApiToken && (
               <div className="pt-2">
                 <Button
@@ -260,7 +264,7 @@ export default function Settings() {
                   onChange={(e) => setDefaultQuantity(e.target.value)}
                   className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                 />
-                <p className="text-xs text-muted-foreground">Used when the signal doesn't specify a quantity</p>
+                <p className="text-xs text-muted-foreground">Max shares per buy signal</p>
               </div>
 
               <div className="space-y-1.5">
@@ -275,6 +279,38 @@ export default function Settings() {
                   <option value="DAY">DAY — cancel at end of day</option>
                   <option value="GTC">GTC — good till cancelled</option>
                 </select>
+              </div>
+            </div>
+
+            {/* Buy Fraction slider */}
+            <div className="pt-2 border-t border-border space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Buy position size</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Fraction of Default Quantity used for each buy order. Sells always use 100% of the open position.
+                  </p>
+                </div>
+                <div className="text-right shrink-0 ml-4">
+                  <span className="text-2xl font-mono font-bold text-primary">{fractionPct}%</span>
+                  <p className="text-xs text-muted-foreground font-mono">{buyQty} shares / buy</p>
+                </div>
+              </div>
+              <input
+                type="range"
+                min="0.01"
+                max="1"
+                step="0.01"
+                value={buyFraction}
+                onChange={(e) => setBuyFraction(e.target.value)}
+                className="w-full accent-primary"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground font-mono">
+                <span>1%</span>
+                <span>25%</span>
+                <span>50%</span>
+                <span>75%</span>
+                <span>100%</span>
               </div>
             </div>
 

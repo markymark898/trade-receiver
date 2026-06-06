@@ -24,6 +24,7 @@ export async function getSettings() {
     defaultQuantity: dbRow?.defaultQuantity ?? "1",
     timeInForce: dbRow?.timeInForce ?? "DAY",
     autoExecute: dbRow?.autoExecute ?? true,
+    buyFraction: dbRow?.buyFraction ?? "1",
     updatedAt: dbRow?.updatedAt ?? new Date(),
   };
 }

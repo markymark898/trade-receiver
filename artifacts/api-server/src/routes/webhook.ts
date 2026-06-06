@@ -1,6 +1,8 @@
 import { Router } from "express";
-import { db, signalsTable } from "@workspace/db";
+import { db, signalsTable, tradesTable } from "@workspace/db";
+import { eq, and, desc } from "drizzle-orm";
 import { placeOrderForSignal } from "../lib/public-com";
+import { getSettings } from "../lib/public-com";
 
 const router = Router();
 
@@ -39,13 +41,14 @@ router.post("/webhook/tradingview", async (req, res) => {
 
   const ticker = toStr(raw["ticker"]) ?? "UNKNOWN";
   const action = toStr(raw["action"]) ?? "unknown";
+  const price = toNum(raw["price"] ?? raw["close"]);
 
   const [signal] = await db
     .insert(signalsTable)
     .values({
       ticker,
       action,
-      price: toNum(raw["price"] ?? raw["close"]),
+      price,
       open: toNum(raw["open"]),
       high: toNum(raw["high"]),
       low: toNum(raw["low"]),
@@ -74,14 +77,73 @@ router.post("/webhook/tradingview", async (req, res) => {
 
   res.json(formatSignal(signal));
 
-  // Fire-and-forget: attempt to place the order on Public.com
-  placeOrderForSignal(signal.id, {
-    ticker: signal.ticker,
-    action: signal.action,
-    price: signal.price != null ? Number(signal.price) : null,
-    quantity: signal.quantity != null ? Number(signal.quantity) : null,
-  }).catch(() => { /* errors logged inside */ });
+  // Fire-and-forget: track trade + place order
+  trackTradeAndPlaceOrder(signal.id, ticker, action, price).catch(() => {/* errors logged inside */});
 });
+
+async function trackTradeAndPlaceOrder(
+  signalId: number,
+  ticker: string,
+  action: string,
+  priceStr: string | null,
+) {
+  const settings = await getSettings();
+  const isBuy = action.toLowerCase().includes("buy");
+  const isSell = action.toLowerCase().includes("sell");
+  const price = priceStr != null ? Number(priceStr) : null;
+
+  if (isBuy && price != null) {
+    // Calculate buy quantity: defaultQuantity * buyFraction
+    const defaultQty = Number(settings?.defaultQuantity ?? "1");
+    const fraction = Number(settings?.buyFraction ?? "1");
+    const qty = Math.max(0.001, defaultQty * fraction);
+
+    await db.insert(tradesTable).values({
+      ticker,
+      buySignalId: signalId,
+      buyPrice: String(price),
+      quantity: String(qty),
+      status: "open",
+    });
+
+    await placeOrderForSignal(signalId, { ticker, action, price, quantity: qty });
+
+  } else if (isSell) {
+    // Find the latest open trade for this ticker
+    const [openTrade] = await db
+      .select()
+      .from(tradesTable)
+      .where(and(eq(tradesTable.ticker, ticker), eq(tradesTable.status, "open")))
+      .orderBy(desc(tradesTable.openedAt))
+      .limit(1);
+
+    if (openTrade && price != null) {
+      const buyPrice = Number(openTrade.buyPrice ?? 0);
+      const qty = Number(openTrade.quantity);
+      const pl = (price - buyPrice) * qty;
+      const plPct = buyPrice > 0 ? ((price - buyPrice) / buyPrice) * 100 : 0;
+
+      await db
+        .update(tradesTable)
+        .set({
+          sellSignalId: signalId,
+          sellPrice: String(price),
+          status: "closed",
+          profitLoss: pl.toFixed(4),
+          profitLossPct: plPct.toFixed(4),
+          closedAt: new Date(),
+        })
+        .where(eq(tradesTable.id, openTrade.id));
+
+      // Sell 100% of the tracked quantity
+      await placeOrderForSignal(signalId, { ticker, action, price, quantity: qty });
+
+    } else if (!openTrade) {
+      // No tracked position — still forward the signal but with default qty
+      await placeOrderForSignal(signalId, { ticker, action, price, quantity: null });
+    }
+  }
+}
 
 export function formatSignal(s: typeof signalsTable.$inferSelect) {
   return {

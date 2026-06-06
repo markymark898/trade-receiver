@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, timestamp, numeric } from "drizzle-orm/pg-core";
 
 export const settingsTable = pgTable("settings", {
   id: serial("id").primaryKey(),
@@ -9,6 +9,7 @@ export const settingsTable = pgTable("settings", {
   defaultQuantity: text("default_quantity").notNull().default("1"),
   timeInForce: text("time_in_force").notNull().default("DAY"),
   autoExecute: boolean("auto_execute").notNull().default(true),
+  buyFraction: numeric("buy_fraction").notNull().default("1"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
