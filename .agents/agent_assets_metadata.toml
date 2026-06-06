@@ -36,3 +36,9 @@ id = "cn2wPW4cW4WYLjxD_Ipa2"
 uri = "file://guides/build-prompt.md"
 type = "text"
 title = "Master Build Prompt — Full App Rebuild"
+
+[[outputs]]
+id = "TKU6MVGoRIznzRI6etore"
+uri = "file://guides/complete-guide.md"
+type = "text"
+title = "Complete Guide — One File, Start to Finish"
