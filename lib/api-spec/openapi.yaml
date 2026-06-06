@@ -499,7 +499,16 @@ components:
           description: Public.com account ID
         hasApiToken:
           type: boolean
-          description: Whether an API token is configured (token itself never returned)
+          description: Whether a Public.com API token is configured (token itself never returned)
+        hasRobinhoodToken:
+          type: boolean
+          description: Whether a Robinhood bearer token is configured
+        hasWebullKey:
+          type: boolean
+          description: Whether Webull App Key is configured
+        webullAccountId:
+          type: ["string", "null"]
+          description: Webull account ID (optional)
         orderType:
           type: string
           enum: [MARKET, LIMIT]
@@ -527,6 +536,17 @@ components:
           type: ["string", "null"]
           description: Public.com API token — pass null to keep existing
         publicAccountId:
+          type: ["string", "null"]
+        robinhoodBearerToken:
+          type: ["string", "null"]
+          description: Robinhood OAuth bearer token — pass null to keep existing
+        webullAppKey:
+          type: ["string", "null"]
+          description: Webull App Key — pass null to keep existing
+        webullAppSecret:
+          type: ["string", "null"]
+          description: Webull App Secret — pass null to keep existing
+        webullAccountId:
           type: ["string", "null"]
         orderType:
           type: string

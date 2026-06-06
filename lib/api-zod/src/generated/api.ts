@@ -253,7 +253,10 @@ export const ListExecutionsResponse = zod.array(ListExecutionsResponseItem)
  */
 export const GetSettingsResponse = zod.object({
   "publicAccountId": zod.string().nullish().describe('Public.com account ID'),
-  "hasApiToken": zod.boolean().optional().describe('Whether an API token is configured (token itself never returned)'),
+  "hasApiToken": zod.boolean().optional().describe('Whether a Public.com API token is configured (token itself never returned)'),
+  "hasRobinhoodToken": zod.boolean().optional().describe('Whether a Robinhood bearer token is configured'),
+  "hasWebullKey": zod.boolean().optional().describe('Whether Webull App Key is configured'),
+  "webullAccountId": zod.string().nullish().describe('Webull account ID (optional)'),
   "orderType": zod.enum(['MARKET', 'LIMIT']),
   "instrumentType": zod.enum(['EQUITY', 'CRYPTO']),
   "defaultQuantity": zod.string(),
@@ -270,6 +273,10 @@ export const GetSettingsResponse = zod.object({
 export const UpdateSettingsBody = zod.object({
   "publicApiToken": zod.string().nullish().describe('Public.com API token — pass null to keep existing'),
   "publicAccountId": zod.string().nullish(),
+  "robinhoodBearerToken": zod.string().nullish().describe('Robinhood OAuth bearer token — pass null to keep existing'),
+  "webullAppKey": zod.string().nullish().describe('Webull App Key — pass null to keep existing'),
+  "webullAppSecret": zod.string().nullish().describe('Webull App Secret — pass null to keep existing'),
+  "webullAccountId": zod.string().nullish(),
   "orderType": zod.enum(['MARKET', 'LIMIT']).optional(),
   "instrumentType": zod.enum(['EQUITY', 'CRYPTO']).optional(),
   "defaultQuantity": zod.string().optional(),
@@ -281,7 +288,10 @@ export const UpdateSettingsBody = zod.object({
 
 export const UpdateSettingsResponse = zod.object({
   "publicAccountId": zod.string().nullish().describe('Public.com account ID'),
-  "hasApiToken": zod.boolean().optional().describe('Whether an API token is configured (token itself never returned)'),
+  "hasApiToken": zod.boolean().optional().describe('Whether a Public.com API token is configured (token itself never returned)'),
+  "hasRobinhoodToken": zod.boolean().optional().describe('Whether a Robinhood bearer token is configured'),
+  "hasWebullKey": zod.boolean().optional().describe('Whether Webull App Key is configured'),
+  "webullAccountId": zod.string().nullish().describe('Webull account ID (optional)'),
   "orderType": zod.enum(['MARKET', 'LIMIT']),
   "instrumentType": zod.enum(['EQUITY', 'CRYPTO']),
   "defaultQuantity": zod.string(),

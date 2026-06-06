@@ -7,11 +7,13 @@ const PUBLIC_API_BASE = "https://api.public.com";
 
 const router = Router();
 
-router.get("/settings", async (_req, res) => {
-  const s = await getSettings();
-  res.json({
+function buildSettingsResponse(s: Awaited<ReturnType<typeof getSettings>>) {
+  return {
     publicAccountId: s?.publicAccountId ?? null,
     hasApiToken: !!(s?.publicApiToken),
+    hasRobinhoodToken: !!(s?.robinhoodBearerToken),
+    hasWebullKey: !!(s?.webullAppKey),
+    webullAccountId: s?.webullAccountId ?? null,
     orderType: s?.orderType ?? "MARKET",
     instrumentType: s?.instrumentType ?? "EQUITY",
     defaultQuantity: s?.defaultQuantity ?? "1",
@@ -19,13 +21,22 @@ router.get("/settings", async (_req, res) => {
     autoExecute: s?.autoExecute ?? true,
     buyFraction: s?.buyFraction ?? "1",
     neverSellAtLoss: s?.neverSellAtLoss ?? false,
-  });
+  };
+}
+
+router.get("/settings", async (_req, res) => {
+  const s = await getSettings();
+  res.json(buildSettingsResponse(s));
 });
 
 router.put("/settings", async (req, res) => {
   const body = req.body as {
     publicApiToken?: string | null;
     publicAccountId?: string | null;
+    robinhoodBearerToken?: string | null;
+    webullAppKey?: string | null;
+    webullAppSecret?: string | null;
+    webullAccountId?: string | null;
     orderType?: string;
     instrumentType?: string;
     defaultQuantity?: string;
@@ -37,8 +48,9 @@ router.put("/settings", async (req, res) => {
 
   const existing = await getSettings();
 
-  const values = {
+  const values: Record<string, unknown> = {
     publicAccountId: body.publicAccountId ?? existing?.publicAccountId ?? null,
+    webullAccountId: body.webullAccountId ?? existing?.webullAccountId ?? null,
     orderType: body.orderType ?? existing?.orderType ?? "MARKET",
     instrumentType: body.instrumentType ?? existing?.instrumentType ?? "EQUITY",
     defaultQuantity: body.defaultQuantity ?? existing?.defaultQuantity ?? "1",
@@ -47,40 +59,33 @@ router.put("/settings", async (req, res) => {
     buyFraction: body.buyFraction ?? existing?.buyFraction ?? "1",
     neverSellAtLoss: body.neverSellAtLoss ?? existing?.neverSellAtLoss ?? false,
     updatedAt: new Date(),
-    // Only update token if explicitly provided (not null = clear, undefined = keep)
-    ...(body.publicApiToken !== undefined
-      ? { publicApiToken: body.publicApiToken || null }
-      : {}),
   };
+
+  // Only update token/key fields when explicitly provided (undefined = keep, null = clear, string = set)
+  if (body.publicApiToken !== undefined) values["publicApiToken"] = body.publicApiToken || null;
+  if (body.robinhoodBearerToken !== undefined) values["robinhoodBearerToken"] = body.robinhoodBearerToken || null;
+  if (body.webullAppKey !== undefined) values["webullAppKey"] = body.webullAppKey || null;
+  if (body.webullAppSecret !== undefined) values["webullAppSecret"] = body.webullAppSecret || null;
 
   let result;
   if (existing) {
-    [result] = await db.update(settingsTable).set(values).where(eq(settingsTable.id, existing.id)).returning();
+    [result] = await db.update(settingsTable)
+      .set(values as Partial<typeof settingsTable.$inferInsert>)
+      .where(eq(settingsTable.id, existing.id))
+      .returning();
   } else {
     [result] = await db.insert(settingsTable).values({
-      ...values,
-      publicApiToken: body.publicApiToken || null,
+      ...(values as Partial<typeof settingsTable.$inferInsert>),
     }).returning();
   }
 
-  res.json({
-    publicAccountId: result?.publicAccountId ?? null,
-    hasApiToken: !!(result?.publicApiToken),
-    orderType: result?.orderType ?? "MARKET",
-    instrumentType: result?.instrumentType ?? "EQUITY",
-    defaultQuantity: result?.defaultQuantity ?? "1",
-    timeInForce: result?.timeInForce ?? "DAY",
-    autoExecute: result?.autoExecute ?? true,
-    buyFraction: result?.buyFraction ?? "1",
-    neverSellAtLoss: result?.neverSellAtLoss ?? false,
-  });
+  res.json(buildSettingsResponse(result));
 });
 
 router.post("/settings/test-connection", async (req, res) => {
   const body = req.body as { publicApiToken?: string; publicAccountId?: string } | undefined;
   const s = await getSettings();
 
-  // Allow testing with values from the request body (unsaved form values)
   const token = body?.publicApiToken || s?.publicApiToken;
   const accountId = body?.publicAccountId || s?.publicAccountId;
 
@@ -100,7 +105,7 @@ router.post("/settings/test-connection", async (req, res) => {
       const bp = (data["buyingPower"] as Record<string, string> | null);
       res.json({
         ok: true,
-        accountId: s.publicAccountId,
+        accountId: s?.publicAccountId,
         accountType: (data["accountType"] as string) ?? null,
         buyingPower: bp?.["buyingPower"] ?? null,
       });
@@ -136,6 +141,7 @@ function formatExecution(e: typeof executionsTable.$inferSelect) {
   return {
     id: e.id,
     signalId: e.signalId,
+    broker: e.broker,
     status: e.status,
     publicOrderId: e.publicOrderId,
     orderType: e.orderType,

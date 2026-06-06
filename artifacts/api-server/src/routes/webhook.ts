@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { db, signalsTable, tradesTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
-import { placeOrderForSignal, getSettings } from "../lib/public-com";
+import { getSettings } from "../lib/public-com";
+import { dispatchToBrokers } from "../lib/brokers/dispatch";
 
 const router = Router();
 
@@ -76,19 +77,19 @@ router.post("/webhook/tradingview", async (req, res) => {
 
   res.json(formatSignal(signal));
 
-  // Fire-and-forget: track trade + place order
-  trackTradeAndPlaceOrder(signal.id, ticker, action, price).catch(() => {/* errors logged inside */});
+  // Fire-and-forget: track trade + dispatch to all connected brokers
+  trackTradeAndDispatch(signal.id, ticker, action, price).catch(() => {/* errors logged inside */});
 });
 
-async function trackTradeAndPlaceOrder(
+async function trackTradeAndDispatch(
   signalId: number,
   ticker: string,
   action: string,
   priceStr: string | null,
 ) {
   const settings = await getSettings();
-  const isBuy = action.toLowerCase().includes("buy");
-  const isSell = action.toLowerCase().includes("sell");
+  const isBuy = action.toLowerCase() === "buy";
+  const isSell = action.toLowerCase() === "sell";
   const price = priceStr != null ? Number(priceStr) : null;
 
   if (isBuy && price != null) {
@@ -104,9 +105,8 @@ async function trackTradeAndPlaceOrder(
       status: "open",
     }).returning();
 
-    const { fillPrice } = await placeOrderForSignal(signalId, { ticker, action, price, quantity: qty });
+    const { fillPrice } = await dispatchToBrokers({ signalId, ticker, action, price, quantity: qty });
 
-    // Store the actual fill price from the brokerage if we got one
     if (trade && fillPrice != null) {
       await db.update(tradesTable)
         .set({ actualBuyPrice: fillPrice })
@@ -127,26 +127,21 @@ async function trackTradeAndPlaceOrder(
       const pl = (price - buyPrice) * qty;
       const plPct = buyPrice > 0 ? ((price - buyPrice) / buyPrice) * 100 : 0;
 
-      // Never-sell-at-loss guard
       if (settings?.neverSellAtLoss && pl < 0) {
         return;
       }
 
-      // Compute signal-based P&L
-      const updates: Partial<typeof tradesTable.$inferInsert> = {
+      await db.update(tradesTable).set({
         sellSignalId: signalId,
         sellPrice: String(price),
         status: "closed",
         profitLoss: pl.toFixed(4),
         profitLossPct: plPct.toFixed(4),
         closedAt: new Date(),
-      };
+      }).where(eq(tradesTable.id, openTrade.id));
 
-      await db.update(tradesTable).set(updates).where(eq(tradesTable.id, openTrade.id));
+      const { fillPrice } = await dispatchToBrokers({ signalId, ticker, action, price, quantity: qty });
 
-      const { fillPrice } = await placeOrderForSignal(signalId, { ticker, action, price, quantity: qty });
-
-      // Compute actual (brokerage) P&L if we have both actual prices
       if (fillPrice != null) {
         const actualSell = Number(fillPrice);
         const actualBuy = openTrade.actualBuyPrice != null ? Number(openTrade.actualBuyPrice) : buyPrice;
@@ -163,7 +158,7 @@ async function trackTradeAndPlaceOrder(
       }
 
     } else if (!openTrade) {
-      await placeOrderForSignal(signalId, { ticker, action, price, quantity: null });
+      await dispatchToBrokers({ signalId, ticker, action, price, quantity: null });
     }
   }
 }

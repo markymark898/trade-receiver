@@ -4,6 +4,7 @@ import { signalsTable } from "./signals";
 export const executionsTable = pgTable("executions", {
   id: serial("id").primaryKey(),
   signalId: integer("signal_id").notNull().references(() => signalsTable.id),
+  broker: text("broker").notNull().default("public"),
   status: text("status").notNull(), // pending | submitted | filled | failed | skipped
   publicOrderId: text("public_order_id"),
   orderType: text("order_type"),

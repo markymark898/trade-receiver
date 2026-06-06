@@ -165,8 +165,17 @@ export interface Settings {
      * @nullable
      */
   publicAccountId?: string | null;
-  /** Whether an API token is configured (token itself never returned) */
+  /** Whether a Public.com API token is configured (token itself never returned) */
   hasApiToken?: boolean;
+  /** Whether a Robinhood bearer token is configured */
+  hasRobinhoodToken?: boolean;
+  /** Whether Webull App Key is configured */
+  hasWebullKey?: boolean;
+  /**
+     * Webull account ID (optional)
+     * @nullable
+     */
+  webullAccountId?: string | null;
   orderType: SettingsOrderType;
   instrumentType: SettingsInstrumentType;
   defaultQuantity: string;
@@ -210,6 +219,23 @@ export interface SettingsInput {
   publicApiToken?: string | null;
   /** @nullable */
   publicAccountId?: string | null;
+  /**
+     * Robinhood OAuth bearer token — pass null to keep existing
+     * @nullable
+     */
+  robinhoodBearerToken?: string | null;
+  /**
+     * Webull App Key — pass null to keep existing
+     * @nullable
+     */
+  webullAppKey?: string | null;
+  /**
+     * Webull App Secret — pass null to keep existing
+     * @nullable
+     */
+  webullAppSecret?: string | null;
+  /** @nullable */
+  webullAccountId?: string | null;
   orderType?: SettingsInputOrderType;
   instrumentType?: SettingsInputInstrumentType;
   defaultQuantity?: string;

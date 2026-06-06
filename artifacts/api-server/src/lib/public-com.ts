@@ -19,6 +19,10 @@ export async function getSettings() {
     id: dbRow?.id ?? 0,
     publicApiToken: dbRow?.publicApiToken || envToken,
     publicAccountId: dbRow?.publicAccountId || envAccountId,
+    robinhoodBearerToken: dbRow?.robinhoodBearerToken ?? null,
+    webullAppKey: dbRow?.webullAppKey ?? null,
+    webullAppSecret: dbRow?.webullAppSecret ?? null,
+    webullAccountId: dbRow?.webullAccountId ?? null,
     orderType: dbRow?.orderType ?? "MARKET",
     instrumentType: dbRow?.instrumentType ?? "EQUITY",
     defaultQuantity: dbRow?.defaultQuantity ?? "1",
@@ -33,12 +37,10 @@ export async function getSettings() {
 /** Try to extract an actual fill price from a Public.com order response. */
 function extractFillPrice(resp: Record<string, unknown> | null): string | null {
   if (!resp) return null;
-  // Try common field names used by Public.com and DriveWealth
   for (const key of ["averagePrice", "avgPrice", "averageFilledPrice", "filledPrice", "lastFilledPrice", "price"]) {
     const v = resp[key];
     if (v != null && v !== "" && !isNaN(Number(v))) return String(v);
   }
-  // Nested: order.averagePrice, etc.
   const inner = resp["order"] as Record<string, unknown> | undefined;
   if (inner && typeof inner === "object") return extractFillPrice(inner);
   return null;
@@ -56,6 +58,7 @@ export async function placeOrderForSignal(signalId: number, opts: {
   if (!settings?.publicApiToken || !settings.publicAccountId) {
     await db.insert(executionsTable).values({
       signalId,
+      broker: "public",
       status: "skipped",
       errorMessage: "Public.com API token or account ID not configured",
     });
@@ -65,6 +68,7 @@ export async function placeOrderForSignal(signalId: number, opts: {
   if (!settings.autoExecute) {
     await db.insert(executionsTable).values({
       signalId,
+      broker: "public",
       status: "skipped",
       errorMessage: "Auto-execute is disabled",
     });
@@ -89,6 +93,7 @@ export async function placeOrderForSignal(signalId: number, opts: {
 
   const [execution] = await db.insert(executionsTable).values({
     signalId,
+    broker: "public",
     status: "pending",
     orderType,
     side,
@@ -114,7 +119,7 @@ export async function placeOrderForSignal(signalId: number, opts: {
 
     if (res.ok) {
       await db.update(executionsTable)
-        .set({ status: "submitted", responseRaw: responseJson, updatedAt: new Date() })
+        .set({ status: "submitted", responseRaw: responseJson as never, updatedAt: new Date() })
         .where(eq(executionsTable.id, execution!.id));
 
       const fillPrice = extractFillPrice(responseJson);
@@ -122,7 +127,7 @@ export async function placeOrderForSignal(signalId: number, opts: {
     } else {
       const errMsg = (responseJson?.["message"] as string) ?? (responseJson?.["error"] as string) ?? `HTTP ${res.status}`;
       await db.update(executionsTable)
-        .set({ status: "failed", errorMessage: errMsg, responseRaw: responseJson, updatedAt: new Date() })
+        .set({ status: "failed", errorMessage: errMsg, responseRaw: responseJson as never, updatedAt: new Date() })
         .where(eq(executionsTable.id, execution!.id));
       logger.error({ signalId, status: res.status, error: errMsg }, "Public.com order failed");
       return { fillPrice: null };
