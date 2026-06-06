@@ -185,6 +185,8 @@ export interface Settings {
   buyFraction?: string;
   /** If true, sell orders are skipped when current price is below the tracked buy price */
   neverSellAtLoss?: boolean;
+  /** Paper-trading starting capital for Indicator P&L simulation (default 10000) */
+  startingCapital?: string;
 }
 
 export type SettingsInputOrderType = typeof SettingsInputOrderType[keyof typeof SettingsInputOrderType];
@@ -243,6 +245,8 @@ export interface SettingsInput {
   autoExecute?: boolean;
   buyFraction?: string;
   neverSellAtLoss?: boolean;
+  /** Paper-trading starting capital for Indicator P&L simulation */
+  startingCapital?: string;
 }
 
 export interface Trade {

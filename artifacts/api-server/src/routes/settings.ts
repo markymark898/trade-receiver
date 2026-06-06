@@ -21,6 +21,7 @@ function buildSettingsResponse(s: Awaited<ReturnType<typeof getSettings>>) {
     autoExecute: s?.autoExecute ?? true,
     buyFraction: s?.buyFraction ?? "1",
     neverSellAtLoss: s?.neverSellAtLoss ?? false,
+    startingCapital: s?.startingCapital ?? "10000",
   };
 }
 
@@ -44,6 +45,7 @@ router.put("/settings", async (req, res) => {
     autoExecute?: boolean;
     buyFraction?: string;
     neverSellAtLoss?: boolean;
+    startingCapital?: string;
   };
 
   const existing = await getSettings();
@@ -58,6 +60,7 @@ router.put("/settings", async (req, res) => {
     autoExecute: body.autoExecute ?? existing?.autoExecute ?? true,
     buyFraction: body.buyFraction ?? existing?.buyFraction ?? "1",
     neverSellAtLoss: body.neverSellAtLoss ?? existing?.neverSellAtLoss ?? false,
+    startingCapital: body.startingCapital ?? existing?.startingCapital ?? "10000",
     updatedAt: new Date(),
   };
 

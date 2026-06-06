@@ -30,6 +30,7 @@ export async function getSettings() {
     autoExecute: dbRow?.autoExecute ?? true,
     buyFraction: dbRow?.buyFraction ?? "1",
     neverSellAtLoss: dbRow?.neverSellAtLoss ?? false,
+    startingCapital: dbRow?.startingCapital ?? "10000",
     updatedAt: dbRow?.updatedAt ?? new Date(),
   };
 }

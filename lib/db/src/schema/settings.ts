@@ -15,6 +15,7 @@ export const settingsTable = pgTable("settings", {
   autoExecute: boolean("auto_execute").notNull().default(true),
   buyFraction: numeric("buy_fraction").notNull().default("1"),
   neverSellAtLoss: boolean("never_sell_at_loss").notNull().default(false),
+  startingCapital: numeric("starting_capital").notNull().default("10000"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

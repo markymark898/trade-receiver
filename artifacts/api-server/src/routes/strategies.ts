@@ -1,53 +1,15 @@
 import { Router } from "express";
 import { db, strategiesTable, signalsTable } from "@workspace/db";
 import { eq, asc, or, ilike } from "drizzle-orm";
+import { getSettings } from "../lib/public-com";
+import { computeSignalPnLFromRows } from "./trades";
 
 const router = Router();
 
-const STALE_INTERRUPTION_THRESHOLD = 5;
-
-function computePnL(signals: { action: string; price: string | null; ticker: string }[], ticker: string | null) {
-  const openBuys = new Map<string, { price: number; interruptions: number }>();
-  const pairs: { pl: number; plPct: number; win: boolean }[] = [];
-
-  for (const sig of signals) {
-    const action = sig.action.toLowerCase();
-    const t = sig.ticker;
-    if (ticker && t !== ticker) continue;
-
-    if (action === "buy" && sig.price != null) {
-      openBuys.set(t, { price: Number(sig.price), interruptions: 0 });
-    } else if (action === "sell" && sig.price != null) {
-      const open = openBuys.get(t);
-      if (open != null) {
-        const price = Number(sig.price);
-        const pl = price - open.price;
-        const plPct = open.price > 0 ? ((price - open.price) / open.price) * 100 : 0;
-        pairs.push({ pl, plPct, win: pl > 0 });
-        openBuys.delete(t);
-      }
-    } else {
-      const open = openBuys.get(t);
-      if (open != null) {
-        const next = open.interruptions + 1;
-        if (next > STALE_INTERRUPTION_THRESHOLD) {
-          openBuys.delete(t);
-        } else {
-          openBuys.set(t, { ...open, interruptions: next });
-        }
-      }
-    }
-  }
-
-  const wins = pairs.filter((p) => p.win).length;
-  const losses = pairs.filter((p) => !p.win).length;
-  const total = pairs.reduce((s, p) => s + p.pl, 0);
-  const winRate = pairs.length > 0 ? Math.round((wins / pairs.length) * 100) : 0;
-
-  return { pairs: pairs.length, wins, losses, totalPnL: total.toFixed(2), winRate };
-}
-
-async function getStrategyStats(strategy: typeof strategiesTable.$inferSelect) {
+async function getStrategyStats(
+  strategy: typeof strategiesTable.$inferSelect,
+  startingCapital: number,
+) {
   const signals = await db
     .select({
       action: signalsTable.action,
@@ -67,17 +29,30 @@ async function getStrategyStats(strategy: typeof strategiesTable.$inferSelect) {
     )
     .orderBy(asc(signalsTable.receivedAt));
 
-  const stats = computePnL(
+  const result = computeSignalPnLFromRows(
     signals.map((s) => ({ action: s.action, price: s.price, ticker: s.ticker })),
+    startingCapital,
     strategy.ticker ?? null,
   );
-  return { signalCount: signals.length, ...stats };
+  return {
+    signalCount: signals.length,
+    pairs: result.pairs,
+    wins: result.wins,
+    losses: result.losses,
+    totalPnL: result.totalProfitLoss,
+    finalCapital: result.finalCapital,
+    winRate: result.winRate,
+  };
 }
 
 router.get("/strategies", async (req, res) => {
-  const rows = await db.select().from(strategiesTable).orderBy(asc(strategiesTable.createdAt));
+  const [rows, settings] = await Promise.all([
+    db.select().from(strategiesTable).orderBy(asc(strategiesTable.createdAt)),
+    getSettings(),
+  ]);
+  const startingCapital = Number(settings?.startingCapital ?? "10000");
   const withStats = await Promise.all(
-    rows.map(async (s) => ({ ...formatStrategy(s), stats: await getStrategyStats(s) }))
+    rows.map(async (s) => ({ ...formatStrategy(s), stats: await getStrategyStats(s, startingCapital) }))
   );
   res.json(withStats);
 });
@@ -106,9 +81,13 @@ router.post("/strategies", async (req, res) => {
 router.get("/strategies/:id", async (req, res) => {
   const id = parseInt(req.params.id ?? "", 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-  const [row] = await db.select().from(strategiesTable).where(eq(strategiesTable.id, id));
+  const [[row], settings] = await Promise.all([
+    db.select().from(strategiesTable).where(eq(strategiesTable.id, id)),
+    getSettings(),
+  ]);
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
-  const stats = await getStrategyStats(row);
+  const startingCapital = Number(settings?.startingCapital ?? "10000");
+  const stats = await getStrategyStats(row, startingCapital);
   res.json({ ...formatStrategy(row), stats });
 });
 

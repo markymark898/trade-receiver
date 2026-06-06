@@ -26,59 +26,54 @@ function formatTrade(t: typeof tradesTable.$inferSelect) {
   };
 }
 
-/**
- * Compute Indicator P&L by pairing buy/sell signals chronologically per ticker.
- * This uses all historical signals so it never misses pairs even if the
- * trades table wasn't around when those signals arrived.
- */
-// Max number of non-buy/sell signals for the same ticker seen between an open buy
-// and a sell before the buy is considered "stale" and discarded.
+// Max non-buy/sell interruptions before a buy is considered stale
 const STALE_INTERRUPTION_THRESHOLD = 5;
 
-async function computeSignalPnL(defaultQty: number) {
-  // Query ALL signals so we can count interruptions between buy/sell pairs
-  const signals = await db
-    .select({
-      id: signalsTable.id,
-      ticker: signalsTable.ticker,
-      action: signalsTable.action,
-      price: signalsTable.price,
-      receivedAt: signalsTable.receivedAt,
-    })
-    .from(signalsTable)
-    .orderBy(asc(signalsTable.receivedAt));
+export type SignalRow = { ticker: string; action: string; price: string | null };
 
-  // Per-ticker: open buy price + count of non-buy/sell signals seen for that ticker since the buy.
-  // If interruptions exceed threshold the buy is stale and discarded.
-  const openBuys = new Map<string, { price: number; interruptions: number }>();
-
+/**
+ * Compute Indicator P&L using a paper-trading simulation:
+ * - Start with `startingCapital`
+ * - On buy: record capital and buy price
+ * - On sell: pnl = capital * (sellPrice - buyPrice) / buyPrice; capital += pnl
+ * - Stale buy protection: if >STALE_INTERRUPTION_THRESHOLD non-buy/sell signals
+ *   for the same ticker arrive before the sell, the buy is discarded.
+ *
+ * If a ticker filter is provided, only signals with that ticker are evaluated.
+ */
+export function computeSignalPnLFromRows(
+  signals: SignalRow[],
+  startingCapital: number,
+  tickerFilter?: string | null,
+) {
+  type OpenBuy = { capital: number; price: number; interruptions: number };
+  const openBuys = new Map<string, OpenBuy>();
   const pairs: { pl: number; plPct: number }[] = [];
+  let capital = startingCapital;
 
   for (const sig of signals) {
     const action = sig.action.toLowerCase();
     const ticker = sig.ticker;
+    if (tickerFilter && ticker !== tickerFilter) continue;
 
     if (action === "buy" && sig.price != null) {
-      // New buy opens (or re-enters) the position — reset interruption counter
-      openBuys.set(ticker, { price: Number(sig.price), interruptions: 0 });
-
+      openBuys.set(ticker, { capital, price: Number(sig.price), interruptions: 0 });
     } else if (action === "sell" && sig.price != null) {
       const open = openBuys.get(ticker);
       if (open != null) {
-        const price = Number(sig.price);
-        const pl = (price - open.price) * defaultQty;
-        const plPct = open.price > 0 ? ((price - open.price) / open.price) * 100 : 0;
-        pairs.push({ pl, plPct });
-        openBuys.delete(ticker); // position closed
+        const sellPrice = Number(sig.price);
+        const plPct = open.price > 0 ? (sellPrice - open.price) / open.price : 0;
+        const pl = open.capital * plPct;
+        capital += pl;
+        pairs.push({ pl, plPct: plPct * 100 });
+        openBuys.delete(ticker);
       }
-
     } else {
-      // Non-buy/sell signal for this ticker — count as an interruption
       const open = openBuys.get(ticker);
       if (open != null) {
         const next = open.interruptions + 1;
         if (next > STALE_INTERRUPTION_THRESHOLD) {
-          openBuys.delete(ticker); // position went stale — too many other signals
+          openBuys.delete(ticker);
         } else {
           openBuys.set(ticker, { ...open, interruptions: next });
         }
@@ -88,15 +83,29 @@ async function computeSignalPnL(defaultQty: number) {
 
   const wins = pairs.filter((p) => p.pl > 0).length;
   const losses = pairs.filter((p) => p.pl <= 0).length;
-  const totalPl = pairs.reduce((sum, p) => sum + p.pl, 0);
+  const totalPl = capital - startingCapital;
 
   return {
     pairs: pairs.length,
     wins,
     losses,
     totalProfitLoss: totalPl.toFixed(2),
+    finalCapital: capital.toFixed(2),
     winRate: pairs.length > 0 ? Math.round((wins / pairs.length) * 100) : 0,
   };
+}
+
+async function computeSignalPnL(startingCapital: number) {
+  const signals = await db
+    .select({
+      ticker: signalsTable.ticker,
+      action: signalsTable.action,
+      price: signalsTable.price,
+    })
+    .from(signalsTable)
+    .orderBy(asc(signalsTable.receivedAt));
+
+  return computeSignalPnLFromRows(signals, startingCapital);
 }
 
 router.get("/trades/stats", async (_req, res) => {
@@ -105,10 +114,10 @@ router.get("/trades/stats", async (_req, res) => {
     db.select().from(tradesTable),
   ]);
 
-  const defaultQty = Number(settings?.defaultQuantity ?? "1") * Number(settings?.buyFraction ?? "1");
+  const startingCapital = Number(settings?.startingCapital ?? "10000");
 
-  // Indicator P&L — computed directly from all signal buy/sell pairs
-  const signalPnL = await computeSignalPnL(defaultQty);
+  // Indicator P&L — paper-trading simulation from signal buy/sell pairs
+  const signalPnL = await computeSignalPnL(startingCapital);
 
   // Brokerage P&L — from actual fill prices in closed trades
   const closed = rows.filter((r) => r.status === "closed");
@@ -122,10 +131,12 @@ router.get("/trades/stats", async (_req, res) => {
     totalTrades: rows.length,
     openTrades: open.length,
     closedTrades: closed.length,
-    // Indicator P&L (from signal pairs)
+    startingCapital: startingCapital.toFixed(2),
+    // Indicator P&L (paper-trading from signal pairs)
     wins: signalPnL.wins,
     losses: signalPnL.losses,
     totalProfitLoss: signalPnL.totalProfitLoss,
+    finalCapital: signalPnL.finalCapital,
     winRate: signalPnL.winRate,
     signalPairs: signalPnL.pairs,
     // Actual brokerage P&L

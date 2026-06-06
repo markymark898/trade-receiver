@@ -625,6 +625,9 @@ components:
         neverSellAtLoss:
           type: boolean
           description: If true, sell orders are skipped when current price is below the tracked buy price
+        startingCapital:
+          type: string
+          description: Paper-trading starting capital for Indicator P&L simulation (default 10000)
 
     SettingsInput:
       type: object
@@ -662,6 +665,9 @@ components:
           type: string
         neverSellAtLoss:
           type: boolean
+        startingCapital:
+          type: string
+          description: Paper-trading starting capital for Indicator P&L simulation
 
     Trade:
       type: object

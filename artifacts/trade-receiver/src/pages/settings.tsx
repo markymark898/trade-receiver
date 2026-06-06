@@ -74,6 +74,7 @@ export default function Settings() {
   const [autoExecute, setAutoExecute] = useState(true);
   const [buyFraction, setBuyFraction] = useState("1");
   const [neverSellAtLoss, setNeverSellAtLoss] = useState(false);
+  const [startingCapital, setStartingCapital] = useState("10000");
   const [initialized, setInitialized] = useState(false);
 
   if (settings && !initialized) {
@@ -86,6 +87,7 @@ export default function Settings() {
     setAutoExecute(settings.autoExecute);
     setBuyFraction(settings.buyFraction ?? "1");
     setNeverSellAtLoss(settings.neverSellAtLoss ?? false);
+    setStartingCapital(settings.startingCapital ?? "10000");
     setInitialized(true);
   }
 
@@ -144,6 +146,7 @@ export default function Settings() {
         autoExecute,
         buyFraction,
         neverSellAtLoss,
+        startingCapital,
       },
     });
   };
@@ -456,6 +459,28 @@ export default function Settings() {
                   <option value="DAY">DAY — cancel at end of day</option>
                   <option value="GTC">GTC — good till cancelled</option>
                 </select>
+              </div>
+            </div>
+
+            {/* Starting Capital for Indicator P&L */}
+            <div className="pt-2 border-t border-border space-y-3">
+              <div>
+                <p className="text-sm font-medium">Paper Trading Starting Capital</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Used to simulate the Indicator P&amp;L — how much your strategy would have made starting with this amount. Compounds across buy/sell pairs.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm font-mono">$</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="100"
+                  value={startingCapital}
+                  onChange={(e) => setStartingCapital(e.target.value)}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  placeholder="10000"
+                />
               </div>
             </div>
 
