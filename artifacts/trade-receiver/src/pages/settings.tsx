@@ -105,6 +105,27 @@ export default function Settings() {
     },
   });
 
+  const disconnect = (broker: "public" | "robinhood" | "webull") => {
+    const payload =
+      broker === "public"
+        ? { publicApiToken: null, publicAccountId: null }
+        : broker === "robinhood"
+        ? { robinhoodBearerToken: null }
+        : { webullAppKey: null, webullAppSecret: null, webullAccountId: null };
+    save(
+      { data: payload },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetSettingsQueryKey() });
+          toast({ title: "Disconnected", description: `${broker === "public" ? "Public.com" : broker === "robinhood" ? "Robinhood" : "Webull"} credentials removed.` });
+          if (broker === "public") { setPublicToken(""); setPublicAccountId(""); }
+          if (broker === "robinhood") setRobinhoodToken("");
+          if (broker === "webull") { setWebullAppKey(""); setWebullAppSecret(""); setWebullAccountId(""); }
+        },
+      }
+    );
+  };
+
   const { mutate: testConn, isPending: testing, data: testResult } = useTestPublicConnection();
 
   const handleSave = () => {
@@ -193,9 +214,14 @@ export default function Settings() {
                 </div>
               </div>
               {settings?.hasApiToken ? (
-                <Badge className="bg-green-100 text-green-700 border-green-200 font-mono text-xs shrink-0">
-                  <Link2 className="w-3 h-3 mr-1" />Connected
-                </Badge>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge className="bg-green-100 text-green-700 border-green-200 font-mono text-xs">
+                    <Link2 className="w-3 h-3 mr-1" />Connected
+                  </Badge>
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => disconnect("public")} disabled={saving}>
+                    <Unlink className="w-3 h-3 mr-1" />Disconnect
+                  </Button>
+                </div>
               ) : (
                 <Badge variant="outline" className="text-muted-foreground text-xs shrink-0">
                   <Unlink className="w-3 h-3 mr-1" />Not connected
@@ -268,9 +294,14 @@ export default function Settings() {
                 </div>
               </div>
               {settings?.hasRobinhoodToken ? (
-                <Badge className="bg-green-100 text-green-700 border-green-200 font-mono text-xs shrink-0">
-                  <Link2 className="w-3 h-3 mr-1" />Connected
-                </Badge>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge className="bg-green-100 text-green-700 border-green-200 font-mono text-xs">
+                    <Link2 className="w-3 h-3 mr-1" />Connected
+                  </Badge>
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => disconnect("robinhood")} disabled={saving}>
+                    <Unlink className="w-3 h-3 mr-1" />Disconnect
+                  </Button>
+                </div>
               ) : (
                 <Badge variant="outline" className="text-muted-foreground text-xs shrink-0">
                   <Unlink className="w-3 h-3 mr-1" />Not connected
@@ -317,9 +348,14 @@ export default function Settings() {
                 </div>
               </div>
               {settings?.hasWebullKey ? (
-                <Badge className="bg-green-100 text-green-700 border-green-200 font-mono text-xs shrink-0">
-                  <Link2 className="w-3 h-3 mr-1" />Connected
-                </Badge>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge className="bg-green-100 text-green-700 border-green-200 font-mono text-xs">
+                    <Link2 className="w-3 h-3 mr-1" />Connected
+                  </Badge>
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => disconnect("webull")} disabled={saving}>
+                    <Unlink className="w-3 h-3 mr-1" />Disconnect
+                  </Button>
+                </div>
               ) : (
                 <Badge variant="outline" className="text-muted-foreground text-xs shrink-0">
                   <Unlink className="w-3 h-3 mr-1" />Not connected
