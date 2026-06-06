@@ -1,18 +1,12 @@
-[PAGE:1|AI Build Prompt — TRD_REQ_RCVR Trading Bot]
+# Full Build Prompt — TradingView Signal Receiver + Public.com Trading Bot
 
-This document is the complete prompt set for rebuilding the TRD_REQ_RCVR app from scratch using an AI coding assistant (Replit Agent, Cursor, Claude Code, etc.). Work through each section in order. Every [PROMPT] block is meant to be pasted directly into your AI coder. Every [CMD] block is run in your terminal.
-
-[NOTE]
-You can paste the entire document at once into Replit Agent, or hand each section one at a time for more control. Either approach works.
-[/NOTE]
+Paste the contents of this file into your AI coding assistant (Replit Agent, Cursor, Claude Code, etc.) to build the complete application from scratch. The prompt is written in sections — you can paste the entire thing at once or one section at a time.
 
 ---
 
-[SECTION:Step 1 — Project Scaffold]
+## MASTER PROMPT — PASTE THIS FIRST
 
-Start by giving your AI coder the full project overview. This sets the stack, folder structure, and ground rules before any code is written.
-
-[PROMPT:Project Scaffold]
+```
 Build a full-stack trading bot dashboard called "TRD_REQ_RCVR" using a pnpm monorepo on Node.js 24 and TypeScript 5.
 
 The app does three things:
@@ -21,35 +15,29 @@ The app does three things:
 3. Automatically executes trades on Public.com via their REST API when a signal arrives
 
 Use this exact monorepo structure:
-- lib/db               — shared Drizzle ORM + PostgreSQL database library
-- lib/api-spec         — OpenAPI 3.1 spec + Orval codegen config
+- lib/db              — shared Drizzle ORM + PostgreSQL database library
+- lib/api-spec        — OpenAPI 3.1 spec + Orval codegen config
 - lib/api-client-react — generated React Query hooks (do not edit manually)
-- lib/api-zod          — generated Zod validation schemas (do not edit manually)
-- artifacts/api-server      — Express 5 backend, reads PORT from environment, logs with pino
-- artifacts/trade-receiver  — React 19 + Vite + Tailwind CSS + shadcn/ui frontend
+- lib/api-zod         — generated Zod validation schemas (do not edit manually)
+- artifacts/api-server — Express 5 backend, reads PORT from environment, logs with pino
+- artifacts/trade-receiver — React 19 + Vite + Tailwind CSS + shadcn/ui frontend
 
-Root package.json scripts must include:
+Root package.json scripts:
   "typecheck:libs": "tsc --build"
   "typecheck": "pnpm run typecheck:libs && pnpm -r --filter ./artifacts/** --if-present run typecheck"
 
-Rules:
-- Strict TypeScript throughout
-- DATABASE_URL environment variable for the Postgres connection string
-- Never use console.log in server code — use req.log in route handlers and a pino logger singleton elsewhere
-- All traffic is proxied through a shared reverse proxy at localhost:80 — the api-server serves /api, the frontend serves /
-[/PROMPT]
-
-[/SECTION]
+Strict TypeScript throughout. DATABASE_URL environment variable for the database connection.
+Never use console.log in server code — use req.log in route handlers and a pino logger singleton elsewhere.
+```
 
 ---
 
-[SECTION:Step 2 — Database Schema]
+## SECTION 1 — DATABASE SCHEMA
 
-[STEP:1|Create the signals table]
+```
+Create the following Drizzle ORM schema files in lib/db/src/schema/:
 
-[PROMPT:signals.ts schema]
-Create lib/db/src/schema/signals.ts with this exact content:
-
+--- FILE: lib/db/src/schema/signals.ts ---
 import { pgTable, serial, text, numeric, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -83,15 +71,8 @@ export const signalsTable = pgTable("signals", {
 export const insertSignalSchema = createInsertSchema(signalsTable).omit({ id: true, receivedAt: true });
 export type InsertSignal = z.infer<typeof insertSignalSchema>;
 export type Signal = typeof signalsTable.$inferSelect;
-[/PROMPT]
 
-[/STEP]
-
-[STEP:2|Create the settings table]
-
-[PROMPT:settings.ts schema]
-Create lib/db/src/schema/settings.ts:
-
+--- FILE: lib/db/src/schema/settings.ts ---
 import { pgTable, serial, text, boolean, timestamp } from "drizzle-orm/pg-core";
 
 export const settingsTable = pgTable("settings", {
@@ -107,15 +88,8 @@ export const settingsTable = pgTable("settings", {
 });
 
 export type Settings = typeof settingsTable.$inferSelect;
-[/PROMPT]
 
-[/STEP]
-
-[STEP:3|Create the executions table]
-
-[PROMPT:executions.ts schema]
-Create lib/db/src/schema/executions.ts:
-
+--- FILE: lib/db/src/schema/executions.ts ---
 import { pgTable, serial, integer, text, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { signalsTable } from "./signals";
 
@@ -135,15 +109,8 @@ export const executionsTable = pgTable("executions", {
 });
 
 export type Execution = typeof executionsTable.$inferSelect;
-[/PROMPT]
 
-[/STEP]
-
-[STEP:4|Create the guide assets table]
-
-[PROMPT:guide-assets.ts schema]
-Create lib/db/src/schema/guide-assets.ts:
-
+--- FILE: lib/db/src/schema/guide-assets.ts ---
 import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
 
 export const guideAssets = pgTable("guide_assets", {
@@ -157,38 +124,22 @@ export const guideAssets = pgTable("guide_assets", {
   assetType: text("asset_type").notNull().default("file"), // file | image
   uploadedAt: timestamp("uploaded_at", { withTimezone: true }).defaultNow(),
 });
-[/PROMPT]
 
-[/STEP]
-
-[STEP:5|Create the schema barrel and push to the database]
-
-[PROMPT:schema/index.ts barrel]
-Create lib/db/src/schema/index.ts:
-
+--- FILE: lib/db/src/schema/index.ts ---
 export * from "./signals";
 export * from "./settings";
 export * from "./executions";
 export * from "./guide-assets";
-[/PROMPT]
 
-Then push the schema to your Postgres database:
-
-[CMD]
+After creating the schema files, run:
 pnpm --filter @workspace/db run push
-[/CMD]
-
-[/STEP]
-
-[/SECTION]
+```
 
 ---
 
-[SECTION:Step 3 — OpenAPI Spec and Codegen]
+## SECTION 2 — OPENAPI SPEC
 
-[STEP:1|Create the OpenAPI spec]
-
-[PROMPT:openapi.yaml]
+```
 Create lib/api-spec/openapi.yaml with the full API contract:
 
 openapi: 3.1.0
@@ -545,48 +496,27 @@ components:
         contentType: { type: string }
         size: { type: ["integer","null"] }
         assetType: { type: string }
-[/PROMPT]
 
-[/STEP]
+After creating the spec, configure Orval in lib/api-spec/orval.config.ts to generate:
+- api-client-react: React Query hooks in lib/api-client-react/src/generated/
+- zod: Zod schemas in lib/api-zod/src/generated/api.ts (mode: split, no separate schemas folder)
 
-[STEP:2|Configure Orval codegen and run it]
-
-[PROMPT:orval.config.ts + codegen script]
-Configure Orval in lib/api-spec/orval.config.ts to generate:
-- React Query hooks into lib/api-client-react/src/generated/
-- Zod validation schemas into lib/api-zod/src/generated/api.ts
-  Use mode: "split" and do NOT enable a separate schemas output block — this causes duplicate export errors.
-
-In lib/api-spec/package.json, the codegen script must overwrite the api-zod barrel after orval runs:
-
+The codegen script in lib/api-spec/package.json must overwrite the api-zod barrel after orval runs
+to avoid duplicate export errors:
 "codegen": "orval --config ./orval.config.ts && printf \"export * from './generated/api';\\n\" > ../api-zod/src/index.ts && pnpm -w run typecheck:libs"
 
-This prevents a known Orval bug where it generates duplicate exports in the barrel file.
-[/PROMPT]
-
-[WARN]
-Do NOT add a separate [KEY]schemas[/KEY] output block to [KEY]orval.config.ts[/KEY]. Orval generates both types and Zod schemas from a single output block when you set [KEY]client: "zod"[/KEY] — a second schemas block creates conflicting exports that break compilation.
-[/WARN]
-
-Then run codegen:
-
-[CMD]
+Then run:
 pnpm --filter @workspace/api-spec run codegen
-[/CMD]
-
-[/STEP]
-
-[/SECTION]
+```
 
 ---
 
-[SECTION:Step 4 — Backend: Express Server and Routes]
+## SECTION 3 — BACKEND: Express App + All Routes
 
-[STEP:1|Create the Express app entry point]
+```
+Create the Express API server in artifacts/api-server/src/.
 
-[PROMPT:app.ts]
-Create artifacts/api-server/src/app.ts:
-
+--- FILE: artifacts/api-server/src/app.ts ---
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
@@ -604,24 +534,13 @@ app.use(pinoHttp({
 }));
 app.use(cors());
 app.use(express.json());
-app.use(express.text({ type: "text/plain" }));
+app.use(express.text({ type: "text/plain" }));  // Required: TradingView sends text/plain
 app.use(express.urlencoded({ extended: true }));
 app.use("/api", router);
 
 export default app;
-[/PROMPT]
 
-[NOTE]
-[KEY]express.text({ type: "text/plain" })[/KEY] is required. TradingView sends webhook payloads as [KEY]Content-Type: text/plain[/KEY] even though the body is JSON. Without this middleware, [KEY]req.body[/KEY] will be undefined for TradingView alerts.
-[/NOTE]
-
-[/STEP]
-
-[STEP:2|Create the webhook route]
-
-[PROMPT:routes/webhook.ts]
-Create artifacts/api-server/src/routes/webhook.ts:
-
+--- FILE: artifacts/api-server/src/routes/webhook.ts ---
 import { Router } from "express";
 import { db, signalsTable } from "@workspace/db";
 import { placeOrderForSignal } from "../lib/public-com";
@@ -663,10 +582,10 @@ router.post("/webhook/tradingview", async (req, res) => {
     open: toNum(raw["open"]), high: toNum(raw["high"]), low: toNum(raw["low"]),
     volume: toNum(raw["volume"]),
     quantity: toNum(raw["quantity"] ?? raw["contracts"]),
-    strategy: toStr(raw["strategy"]),   message: toStr(raw["message"]),
-    exchange: toStr(raw["exchange"]),   interval: toStr(raw["interval"]),
-    currency: toStr(raw["currency"]),   basecurrency: toStr(raw["basecurrency"]),
-    alertTime: toStr(raw["time"]),      timenow: toStr(raw["timenow"]),
+    strategy: toStr(raw["strategy"]), message: toStr(raw["message"]),
+    exchange: toStr(raw["exchange"]), interval: toStr(raw["interval"]),
+    currency: toStr(raw["currency"]), basecurrency: toStr(raw["basecurrency"]),
+    alertTime: toStr(raw["time"]), timenow: toStr(raw["timenow"]),
     positionSize: toNum(raw["position_size"]),
     orderPrice: toNum(raw["order_price"]),
     orderId: toStr(raw["order_id"]),
@@ -676,14 +595,14 @@ router.post("/webhook/tradingview", async (req, res) => {
 
   if (!signal) { res.status(500).json({ error: "Failed to store signal" }); return; }
 
-  // Respond to TradingView FIRST, then fire the trade in the background
   res.json(formatSignal(signal));
 
+  // Fire-and-forget: place the trade on Public.com without blocking the response
   placeOrderForSignal(signal.id, {
     ticker: signal.ticker, action: signal.action,
     price: signal.price != null ? Number(signal.price) : null,
     quantity: signal.quantity != null ? Number(signal.quantity) : null,
-  }).catch(() => { /* errors are logged inside placeOrderForSignal */ });
+  }).catch(() => { /* errors logged inside */ });
 });
 
 export function formatSignal(s: typeof signalsTable.$inferSelect) {
@@ -695,32 +614,20 @@ export function formatSignal(s: typeof signalsTable.$inferSelect) {
     low: s.low != null ? Number(s.low) : null,
     volume: s.volume != null ? Number(s.volume) : null,
     quantity: s.quantity != null ? Number(s.quantity) : null,
-    strategy: s.strategy,   message: s.message,
-    exchange: s.exchange,   interval: s.interval,
-    currency: s.currency,   basecurrency: s.basecurrency,
+    strategy: s.strategy, message: s.message, exchange: s.exchange,
+    interval: s.interval, currency: s.currency, basecurrency: s.basecurrency,
     alertTime: s.alertTime, timenow: s.timenow,
     positionSize: s.positionSize != null ? Number(s.positionSize) : null,
     orderPrice: s.orderPrice != null ? Number(s.orderPrice) : null,
-    orderId: s.orderId,     orderComment: s.orderComment,
+    orderId: s.orderId, orderComment: s.orderComment,
     receivedAt: s.receivedAt.toISOString(),
     raw: s.raw,
   };
 }
 
 export default router;
-[/PROMPT]
 
-[WARN]
-Always call [KEY]res.json(formatSignal(signal))[/KEY] BEFORE calling [KEY]placeOrderForSignal[/KEY]. TradingView has a short timeout and will retry the webhook if your server doesn't respond quickly. The trade goes out in the background after the response is sent.
-[/WARN]
-
-[/STEP]
-
-[STEP:3|Create the Public.com integration library]
-
-[PROMPT:lib/public-com.ts]
-Create artifacts/api-server/src/lib/public-com.ts:
-
+--- FILE: artifacts/api-server/src/lib/public-com.ts ---
 import { db, settingsTable, executionsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -808,60 +715,35 @@ export async function placeOrderForSignal(
     logger.error({ signalId, err: msg }, "Public.com order error");
   }
 }
-[/PROMPT]
 
-[NOTE]
-Public.com API base URL: [KEY]https://api.public.com[/KEY]
+--- FILE: artifacts/api-server/src/routes/settings.ts ---
+// Handles GET/PUT /settings, POST /settings/test-connection, GET /executions,
+// and GET /signals/:id/execution
+//
+// IMPORTANT: Never return the raw publicApiToken in any response.
+// Always return hasApiToken: boolean instead.
+//
+// PUT /settings only updates the token if publicApiToken is explicitly provided
+// in the request body. Pass null to clear it, omit the field to keep the existing value.
+//
+// POST /settings/test-connection calls:
+//   GET https://api.public.com/userapigateway/trading/{accountId}/portfolio/v2
+// and returns { ok, accountId, accountType, buyingPower } on success
+// or { ok: false, error } on failure.
 
-Place order endpoint: [KEY]POST /userapigateway/trading/{accountId}/order[/KEY]
+--- FILE: artifacts/api-server/src/routes/signals.ts ---
+// Handles GET /signals, GET /signals/stats, GET /signals/:id
+//
+// /signals/stats must be defined BEFORE /signals/:id or Express will treat
+// "stats" as an :id parameter.
+//
+// Stats counts:
+//   total: count all rows
+//   buys: count where action contains "buy" (case-insensitive)
+//   sells: count where action contains "sell" (case-insensitive)
+//   tickerBreakdown: top 10 tickers by signal count
 
-Test connection endpoint: [KEY]GET /userapigateway/trading/{accountId}/portfolio/v2[/KEY]
-
-All requests use [KEY]Authorization: Bearer {token}[/KEY] headers.
-[/NOTE]
-
-[/STEP]
-
-[STEP:4|Create the settings, signals, and guide assets routes]
-
-[PROMPT:routes/settings.ts]
-Create artifacts/api-server/src/routes/settings.ts.
-
-This file handles: GET /settings, PUT /settings, POST /settings/test-connection, GET /executions, GET /signals/:id/execution.
-
-Critical rules:
-- GET /settings must NEVER return the raw publicApiToken — return hasApiToken: boolean instead
-- PUT /settings: only update the token when publicApiToken is explicitly present in the body
-  (undefined = keep existing value, null = clear the token, any string = set new value)
-- POST /settings/test-connection calls GET https://api.public.com/userapigateway/trading/{accountId}/portfolio/v2
-  and returns { ok: true, accountId, accountType, buyingPower } on success or { ok: false, error } on failure
-- The settings table always has at most one row — use upsert logic (check if row exists, then update or insert)
-
-The formatExecution helper returns:
-{ id, signalId, status, publicOrderId, orderType, side, quantity, limitPrice, errorMessage, createdAt, updatedAt }
-(all timestamps as ISO strings)
-[/PROMPT]
-
-[PROMPT:routes/signals.ts]
-Create artifacts/api-server/src/routes/signals.ts.
-
-Handles: GET /signals/stats, GET /signals, GET /signals/:id
-
-IMPORTANT: Define GET /signals/stats BEFORE GET /signals/:id in the file.
-Express matches routes top-to-bottom. If :id comes first, the literal string "stats" will be
-parsed as an id value and the stats endpoint will never be reached.
-
-Stats counts:
-- total: count(*) all rows in signals table
-- buys: count where action LIKE '%buy%' (case-insensitive)
-- sells: count where action LIKE '%sell%' (case-insensitive)
-- lastSignalAt: receivedAt of the most recent signal
-- tickerBreakdown: top 10 tickers by signal count, returned as [{ ticker, count }]
-[/PROMPT]
-
-[PROMPT:routes/guide-assets.ts]
-Create artifacts/api-server/src/routes/guide-assets.ts:
-
+--- FILE: artifacts/api-server/src/routes/guide-assets.ts ---
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
 import { guideAssets } from "@workspace/db/schema";
@@ -889,17 +771,14 @@ router.delete("/guide-assets/:id", async (req: Request, res: Response) => {
 });
 
 export default router;
-[/PROMPT]
 
-[PROMPT:routes/index.ts]
-Create artifacts/api-server/src/routes/index.ts that mounts all routers:
-
+--- FILE: artifacts/api-server/src/routes/index.ts ---
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import webhookRouter from "./webhook";
 import signalsRouter from "./signals";
 import settingsRouter from "./settings";
-import storageRouter from "./storage";
+import storageRouter from "./storage";    // from object storage setup — see Section 5
 import guideAssetsRouter from "./guide-assets";
 
 const router: IRouter = Router();
@@ -911,398 +790,274 @@ router.use(storageRouter);
 router.use(guideAssetsRouter);
 
 export default router;
-[/PROMPT]
-
-[/STEP]
-
-[/SECTION]
+```
 
 ---
 
-[SECTION:Step 5 — Object Storage for File Uploads]
+## SECTION 4 — FRONTEND: React Dashboard
 
-[STEP:1|Provision the storage bucket]
+```
+Build the artifacts/trade-receiver frontend with React 19, Vite, Tailwind CSS, shadcn/ui,
+wouter for routing, and @tanstack/react-query with the generated hooks.
 
-Run this once in the Replit code execution sandbox to provision a GCS bucket and set the required environment variables:
+Theme: white background, orange primary accent (#F97316 / Tailwind orange-500), dark text.
+The app name displayed in the header is "TRD_REQ_RCVR" in a monospace font.
 
-[PROMPT:Provision storage]
-In the Replit code execution sandbox, run:
+--- ROUTE STRUCTURE (App.tsx) ---
+/ ................ Home dashboard
+/signals/:id ..... Signal detail
+/settings ........ Settings page
+/guides .......... Guide assets manager
 
-const result = await setupObjectStorage();
-console.log(result);
-
-This sets three environment variables automatically:
-- DEFAULT_OBJECT_STORAGE_BUCKET_ID
-- PUBLIC_OBJECT_SEARCH_PATHS
-- PRIVATE_OBJECT_DIR
-[/PROMPT]
-
-[/STEP]
-
-[STEP:2|Install server dependencies for storage]
-
-[CMD]
-pnpm --filter @workspace/api-server add @google-cloud/storage google-auth-library
-[/CMD]
-
-[/STEP]
-
-[STEP:3|Copy the object storage templates]
-
-[PROMPT:Object storage template setup]
-Copy the Replit object storage templates into the project:
-
-cp .local/skills/object-storage/templates/api-server/src/lib/objectStorage.ts artifacts/api-server/src/lib/
-cp .local/skills/object-storage/templates/api-server/src/lib/objectAcl.ts artifacts/api-server/src/lib/
-cp .local/skills/object-storage/templates/api-server/src/routes/storage.ts artifacts/api-server/src/routes/
-
-mkdir -p lib/object-storage-web
-cp -r .local/skills/object-storage/templates/lib/object-storage-web/* lib/object-storage-web/
-
-Then fix a TypeScript error in objectStorage.ts — change:
-  const { signed_url: signedURL } = await response.json();
-to:
-  const data = await response.json() as { signed_url: string };
-  const signedURL = data.signed_url;
-[/PROMPT]
-
-[/STEP]
-
-[STEP:4|Install client upload packages and fix React peer deps]
-
-[CMD]
-pnpm --filter @workspace/trade-receiver add @uppy/aws-s3@^5.0.0 @uppy/core@^5.0.0 @uppy/dashboard@^5.0.0 @uppy/react@^5.0.0
-[/CMD]
-
-Add React version overrides to the root [KEY]package.json[/KEY] to prevent duplicate React installs caused by Uppy's peer dependency declarations:
-
-[COPY]
-"pnpm": {
-  "overrides": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
-  }
-}
-[/COPY]
-
-Then reinstall to apply overrides:
-
-[CMD]
-pnpm install
-[/CMD]
-
-[/STEP]
-
-[STEP:5|Wire object-storage-web as a composite lib]
-
-[PROMPT:Composite lib wiring]
-Make lib/object-storage-web a proper composite TypeScript lib so it can be shared across packages.
-
-In lib/object-storage-web/tsconfig.json compilerOptions, add:
-  "composite": true,
-  "declarationMap": true,
-  "emitDeclarationOnly": true
-
-In the root tsconfig.json references array, add:
-  { "path": "./lib/object-storage-web" }
-
-In artifacts/trade-receiver/tsconfig.json references array, add:
-  { "path": "../../lib/object-storage-web" }
-
-In artifacts/trade-receiver/package.json devDependencies, add:
-  "@workspace/object-storage-web": "workspace:*"
-[/PROMPT]
-
-[/STEP]
-
-[/SECTION]
-
----
-
-[SECTION:Step 6 — Frontend: React Dashboard]
-
-[STEP:1|Set up routing and theme]
-
-[PROMPT:Frontend scaffold]
-Set up the artifacts/trade-receiver React app with:
-- wouter for routing
-- @tanstack/react-query with the generated hooks from @workspace/api-client-react
-- Tailwind CSS with this theme override in tailwind.config.ts:
-    primary: "#F97316"  (orange-500)
-  White backgrounds, dark text, orange accents throughout.
-
-App router (App.tsx):
-  / ................ Home dashboard
-  /signals/:id ..... Signal detail page
-  /settings ........ Bot settings page
-  /guides .......... Guide assets manager
-[/PROMPT]
-
-[/STEP]
-
-[STEP:2|Build the Home dashboard page]
-
-[PROMPT:pages/home.tsx]
-Build the home dashboard page at /.
-
+--- PAGE: / (Home) ---
 Header:
-- App name "TRD_REQ_RCVR" in a monospace font with a terminal icon
-- Subtitle: "Live monitoring dashboard for TradingView webhook signals."
-- Two nav buttons top-right: "Guide Assets" (links to /guides) and "Settings" (links to /settings)
+  - App name "TRD_REQ_RCVR" with a terminal icon
+  - Subtitle: "Live monitoring dashboard for TradingView webhook signals."
+  - Buttons: "Guide Assets" (links to /guides) and "Settings" (links to /settings)
 
-TradingView Setup card (orange-50 background, orange-200 border):
-- Displays the webhook URL: window.location.origin + "/api/webhook/tradingview"
-- One-click copy button for the URL
-- Collapsible section with the JSON alert message template and a copy button:
+TradingView Setup card (orange-tinted):
+  - Displays webhook URL: window.location.origin + "/api/webhook/tradingview"
+  - One-click copy button for the URL
+  - Collapsible section showing the JSON alert message template (with copy button):
 
-  {
-    "action": "{{strategy.order.action}}",
-    "ticker": "{{ticker}}",
-    "exchange": "{{exchange}}",
-    "interval": "{{interval}}",
-    "price": {{close}},
-    "open": {{open}},
-    "high": {{high}},
-    "low": {{low}},
-    "volume": {{volume}},
-    "time": "{{time}}",
-    "timenow": "{{timenow}}",
-    "currency": "{{syminfo.currency}}",
-    "basecurrency": "{{syminfo.basecurrency}}",
-    "position_size": {{strategy.position_size}},
-    "order_price": {{strategy.order.price}},
-    "order_id": "{{strategy.order.id}}",
-    "order_comment": "{{strategy.order.comment}}"
-  }
+    {
+      "action": "{{strategy.order.action}}",
+      "ticker": "{{ticker}}",
+      "exchange": "{{exchange}}",
+      "interval": "{{interval}}",
+      "price": {{close}},
+      "open": {{open}},
+      "high": {{high}},
+      "low": {{low}},
+      "volume": {{volume}},
+      "time": "{{time}}",
+      "timenow": "{{timenow}}",
+      "currency": "{{syminfo.currency}}",
+      "basecurrency": "{{syminfo.basecurrency}}",
+      "position_size": {{strategy.position_size}},
+      "order_price": {{strategy.order.price}},
+      "order_id": "{{strategy.order.id}}",
+      "order_comment": "{{strategy.order.comment}}"
+    }
 
-- Note below: "strategy.* placeholders only work in Strategy alerts, not Basic alerts"
+  - Note: "strategy placeholders like {{strategy.order.action}} only work in Strategy alerts"
 
-Stats row (4 cards):
-- Total Signals — activity icon
-- Buy Signals — green, trending-up icon
-- Sell Signals — red, trending-down icon
-- Last Signal — clock icon, shows relative time (e.g. "about 2 minutes ago")
+Stats cards (4 cards in a row):
+  - Total Signals (with activity icon)
+  - Buy Signals (green, trending up icon)
+  - Sell Signals (red, trending down icon)
+  - Last Signal (relative time, e.g. "about 2 minutes ago")
 
-Live Feed table — refetchInterval: 5000 (auto-refreshes every 5 seconds):
-  Columns: TIME | TICKER | ACTION | PRICE | SIZE | EXCHANGE | ORDER | (link)
-  ACTION badge: green for buy, red for sell
+Live Feed table (auto-refreshes every 5 seconds using refetchInterval: 5000):
+  Columns: TIME | TICKER | ACTION | PRICE | SIZE | EXCHANGE | ORDER | (details link)
+
+  ACTION badge: green background for buy, red for sell
   ORDER badge colors:
-    submitted → blue
-    filled → green
-    failed → red
-    pending → amber/yellow
-    skipped → gray
+    submitted = blue
+    filled = green
+    failed = red
+    pending = yellow/amber
+    skipped = gray
   Each row has a "Details →" link to /signals/:id
-[/PROMPT]
 
-[/STEP]
+--- PAGE: /signals/:id (Signal Detail) ---
+- Back link to home
+- Full signal data in labeled sections:
+  - Core fields: Ticker, Action, Exchange, Interval, Strategy
+  - OHLCV section (if price data available): Open, High, Low, Close, Volume
+  - Order details: Position Size, Order Price, Order ID, Order Comment
+  - Execution card: shows status badge, order type, side, quantity, error if failed
+  - Raw JSON payload in a collapsible code block
 
-[STEP:3|Build the Signal Detail page]
+--- PAGE: /settings ---
+- Back link to home
+- Settings icon and "Bot Settings" heading
 
-[PROMPT:pages/signal-detail.tsx]
-Build the signal detail page at /signals/:id.
-
-- Back arrow link to home
-- Page heading: ticker + action badge
-
-Sections:
-1. Core fields: Ticker, Action, Exchange, Interval, Strategy, Message
-2. OHLCV (only show if any price data is present): Open, High, Low, Close/Price, Volume
-3. Order fields: Position Size, Order Price, Order ID, Order Comment
-4. Execution card: status badge, order type, side, quantity, limit price, error message (if failed)
-5. Raw payload: collapsible code block showing the full JSON from the "raw" field
-[/PROMPT]
-
-[/STEP]
-
-[STEP:4|Build the Settings page]
-
-[PROMPT:pages/settings.tsx]
-Build the settings page at /settings.
-
-Header: back arrow, Settings2 icon, "Bot Settings" heading.
-
-Form — three sections:
+Form sections:
 
 1. Public.com API:
-   - API Token: password input, hidden by default, eye icon to toggle visibility
-     Placeholder: "Enter new token to update" when hasApiToken is true
-     Show a green "Connected ✓" badge when hasApiToken is true
-   - Account ID: text input for the Public.com account ID
+   - API Token: password input, masked. Placeholder text when token is saved.
+     Show eye icon to toggle visibility. Leave blank to keep existing token.
+     Show "Connected ✓" badge when hasApiToken is true.
+   - Account ID: text input
    - "Test Connection" button: calls POST /api/settings/test-connection
-     On success: show account type and buying power inline
-     On failure: show the error message inline in red
+     Show result inline (buying power and account type on success, error on failure)
 
-2. Order Defaults:
-   - Order Type: select — MARKET or LIMIT
-   - Instrument Type: select — EQUITY or CRYPTO
-   - Default Quantity: number input (used when the signal doesn't include a quantity)
-   - Time In Force: select — DAY or GTC
+2. Order Settings:
+   - Order Type: select (MARKET / LIMIT)
+   - Instrument Type: select (EQUITY / CRYPTO)
+   - Default Quantity: number input
+   - Time In Force: select (DAY / GTC)
 
 3. Automation:
-   - Auto-Execute: boolean toggle switch
-   - Description below toggle: "When enabled, every incoming signal automatically places an order on Public.com"
+   - Auto-Execute toggle (boolean switch)
+   - Description: "When enabled, every incoming signal automatically places an order on Public.com"
 
-Save button (full width, orange): calls PUT /api/settings
-[/PROMPT]
+Save button: calls PUT /api/settings
 
-[/STEP]
+--- PAGE: /guides (Guide Assets Manager) ---
+Header: "Guide Assets" with book icon, back link to home, asset count
 
-[STEP:5|Build the Guide Assets page]
+Upload panels (side by side):
+  Left panel — Downloadable File:
+    - Accepts: .pdf,.zip,.txt,.md,.py,.ts,.json,.csv,.xlsx,.docx
+    - Dashed drop zone with upload icon, click to select
+    - Label input (required), Description textarea (optional)
+    - Upload button (orange)
+    - Flow: POST /api/storage/uploads/request-url → PUT presigned URL → POST /api/guide-assets
 
-[PROMPT:pages/guides.tsx]
-Build the guide assets manager page at /guides.
+  Right panel — Screenshot / Image:
+    - Accepts: .png,.jpg,.jpeg,.gif,.webp,.svg
+    - Same flow as above
+    - Shows image preview after file selection
 
-Header: back arrow, BookOpen icon, "Guide Assets" heading, asset count badge top-right.
-
-Two upload panels side by side:
-
-Left panel — Downloadable File:
-  Accepts: .pdf, .zip, .txt, .md, .py, .ts, .json, .csv, .xlsx, .docx
-  - Dashed drop zone, click to select file
-  - Label input (required)
-  - Description textarea (optional)
-  - Orange Upload button
-  Upload flow:
-    1. POST /api/storage/uploads/request-url with { name, size, contentType }
-    2. PUT the presigned URL with the file bytes
-    3. POST /api/guide-assets to record { name, label, description, objectPath, contentType, size, assetType: "file" }
-
-Right panel — Screenshot / Image:
-  Accepts: .png, .jpg, .jpeg, .gif, .webp, .svg
-  - Same upload flow, assetType: "image"
-  - Shows image preview after file is selected
-
-Info box below the panels:
-  Explains the two guide symbols with copyable examples:
-  [IMG:/objects/abc123|Screenshot of TradingView alert setup]
-  [DOWNLOAD:/objects/abc123|Download Starter Pine Script]
+Info box explaining guide symbols:
+  [IMG:/objects/abc123|Alt text]
+  [DOWNLOAD:/objects/abc123|Button label]
 
 Asset lists:
+  Downloadable Files section: list view with file icon, label, description, filename, size, upload time
+  Screenshots section: grid preview (4 columns) + list view below
 
-Downloadable Files section:
-  List view: file icon, label, description, filename, file size, upload time
-  On hover: show copy-symbol button, open/download link, delete button
-
-Screenshots section:
-  4-column image grid, then list below
-  On hover: show copy-symbol button, open link, delete button
-
-Copy-symbol button behavior:
-  - For images: copies [IMG:{objectPath}|{label}] to clipboard
-  - For files: copies [DOWNLOAD:{objectPath}|{label}] to clipboard
-  Show a brief toast/confirmation after copying.
-[/PROMPT]
-
-[/STEP]
-
-[/SECTION]
+Each asset row (visible on hover):
+  - File type badge
+  - Copy symbol button (copies [IMG:...] or [DOWNLOAD:...] to clipboard)
+  - Download/open link
+  - Delete button
+```
 
 ---
 
-[SECTION:Step 7 — Verify Everything Works]
+## SECTION 5 — OBJECT STORAGE SETUP
 
-[STEP:1|Check the API is running]
+```
+Set up Replit object storage for file uploads. This provides presigned URL uploads
+directly to Google Cloud Storage.
 
-[CMD]
-curl localhost:80/api/healthz
-[/CMD]
+Step 1: Provision storage
+  Run this in the Replit code execution sandbox:
+  const result = await setupObjectStorage();
+  console.log(result);
+  // Sets env vars: DEFAULT_OBJECT_STORAGE_BUCKET_ID, PUBLIC_OBJECT_SEARCH_PATHS, PRIVATE_OBJECT_DIR
 
-Expected: [KEY]{ "status": "ok" }[/KEY]
+Step 2: Install server dependencies
+  pnpm --filter @workspace/api-server add @google-cloud/storage google-auth-library
 
-[STEP:2|Send a test webhook]
+Step 3: Copy the object storage templates from the skill
+  cp .local/skills/object-storage/templates/api-server/src/lib/objectStorage.ts artifacts/api-server/src/lib/
+  cp .local/skills/object-storage/templates/api-server/src/lib/objectAcl.ts artifacts/api-server/src/lib/
+  cp .local/skills/object-storage/templates/api-server/src/routes/storage.ts artifacts/api-server/src/routes/
+  mkdir -p lib/object-storage-web
+  cp -r .local/skills/object-storage/templates/lib/object-storage-web/* lib/object-storage-web/
 
-[CMD]
-curl -X POST localhost:80/api/webhook/tradingview \
-  -H "Content-Type: application/json" \
-  -d '{"ticker":"AAPL","action":"buy","price":175.50,"exchange":"NASDAQ"}'
-[/CMD]
+Step 4: Fix the objectStorage.ts type error on the signed URL response:
+  Change:
+    const { signed_url: signedURL } = await response.json();
+  To:
+    const data = await response.json() as { signed_url: string };
+    const signedURL = data.signed_url;
 
-Expected: JSON object with [KEY]id[/KEY], [KEY]ticker[/KEY], [KEY]action[/KEY], [KEY]receivedAt[/KEY] fields.
+Step 5: Install client packages
+  pnpm --filter @workspace/trade-receiver add @uppy/aws-s3@^5.0.0 @uppy/core@^5.0.0 @uppy/dashboard@^5.0.0 @uppy/react@^5.0.0
 
-[STEP:3|Check signals and stats]
+Step 6: Add React version overrides to root package.json to prevent duplicate React installs:
+  "pnpm": {
+    "overrides": {
+      "react": "19.1.0",
+      "react-dom": "19.1.0"
+    }
+  }
 
-[CMD]
-curl localhost:80/api/signals
-[/CMD]
+Step 7: Make object-storage-web a composite lib.
+  Add to lib/object-storage-web/tsconfig.json compilerOptions:
+    "composite": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true
 
-[CMD]
-curl localhost:80/api/signals/stats
-[/CMD]
+  Add to root tsconfig.json references:
+    { "path": "./lib/object-storage-web" }
 
-Expected stats: [KEY]{ total, buys, sells, lastSignalAt, tickerBreakdown }[/KEY]
+  Add to artifacts/trade-receiver/tsconfig.json references:
+    { "path": "../../lib/object-storage-web" }
 
-[STEP:4|Confirm settings never leaks the API token]
+  Add to artifacts/trade-receiver/package.json devDependencies:
+    "@workspace/object-storage-web": "workspace:*"
 
-[CMD]
-curl localhost:80/api/settings
-[/CMD]
+Step 8: Wire the storage router in artifacts/api-server/src/routes/index.ts
+  import storageRouter from "./storage";
+  router.use(storageRouter);
 
-Expected: [KEY]{ "hasApiToken": false, "orderType": "MARKET", "autoExecute": true, ... }[/KEY]
-
-[TIP]
-The response must contain [KEY]hasApiToken[/KEY] (a boolean), never [KEY]publicApiToken[/KEY] (the raw token). If you see the raw token in the response, the settings route has a bug.
-[/TIP]
-
-[STEP:5|Run a full TypeScript check]
-
-[CMD]
-pnpm run typecheck
-[/CMD]
-
-Must exit clean with zero errors. If codegen output causes errors, re-run:
-
-[CMD]
-pnpm --filter @workspace/api-spec run codegen
-[/CMD]
-
-[/STEP]
-
-[/SECTION]
+Step 9: Run pnpm install to apply overrides
+  pnpm install
+```
 
 ---
 
-[SECTION:Critical Notes for the AI]
+## SECTION 6 — VERIFICATION CHECKLIST
 
-These are the six most common mistakes when building this app. Review them before and after building.
+```
+After building, verify each item:
 
-[WARN]
-**Fire-and-forget order**: The webhook handler must call [KEY]res.json()[/KEY] BEFORE calling [KEY]placeOrderForSignal()[/KEY]. TradingView has a strict response timeout. If the API call to Public.com runs before the response is sent, TradingView may mark your webhook as failed and retry it — firing duplicate trades.
-[/WARN]
+API server (port 8080, served at /api):
+  curl localhost:80/api/healthz
+  → { "status": "ok" }
 
-[WARN]
-**Token security**: The [KEY]publicApiToken[/KEY] column must NEVER appear in any API response. [KEY]GET /settings[/KEY] returns [KEY]hasApiToken: boolean[/KEY] only. [KEY]PUT /settings[/KEY] only updates the token when the field is explicitly present in the request body — [KEY]undefined[/KEY] keeps the existing value, [KEY]null[/KEY] clears it, a string sets a new value.
-[/WARN]
+  curl -X POST localhost:80/api/webhook/tradingview \
+    -H "Content-Type: application/json" \
+    -d '{"ticker":"AAPL","action":"buy","price":175.50}'
+  → Returns signal object with id, ticker, action, receivedAt
 
-[WARN]
-**Route order**: In [KEY]signals.ts[/KEY], always define [KEY]GET /signals/stats[/KEY] BEFORE [KEY]GET /signals/:id[/KEY]. Express matches routes top-to-bottom. If the [KEY]:id[/KEY] pattern comes first, the literal string "stats" will be parsed as an integer id — the stats endpoint becomes unreachable.
-[/WARN]
+  curl localhost:80/api/signals
+  → Returns array of signals (most recent first)
 
-[NOTE]
-**text/plain middleware**: TradingView sends webhook bodies as [KEY]Content-Type: text/plain[/KEY] even when the content is JSON. The app needs both [KEY]express.json()[/KEY] (for normal JSON clients) and [KEY]express.text({ type: "text/plain" })[/KEY] (for TradingView). The webhook handler then tries [KEY]JSON.parse()[/KEY] on string bodies.
-[/NOTE]
+  curl localhost:80/api/signals/stats
+  → Returns { total, buys, sells, lastSignalAt, tickerBreakdown }
 
-[NOTE]
-**Codegen barrel fix**: Orval has a known issue where it generates duplicate named exports when you run it with certain config options. The fix is to overwrite [KEY]lib/api-zod/src/index.ts[/KEY] after running orval so it contains only [KEY]export * from './generated/api';[/KEY] — nothing else. This is done automatically by the codegen npm script.
-[/NOTE]
+  curl localhost:80/api/settings
+  → Returns { hasApiToken: false, orderType: "MARKET", autoExecute: true, ... }
 
-[NOTE]
-**Object storage paths**: Uploaded files are served at [KEY]/api/storage/objects{objectPath}[/KEY]. The [KEY]objectPath[/KEY] returned from the upload API already starts with [KEY]/objects/[/KEY], so the full URL becomes [KEY]/api/storage/objects/objects/{uuid}[/KEY]. This double "objects" in the URL is correct — do not remove one of them.
-[/NOTE]
+Frontend (auto-refreshes every 5s):
+  - Dashboard shows signal count cards and live feed table
+  - TradingView setup card displays the deployed webhook URL
+  - Settings page has Test Connection button
+  - Guide Assets page has upload panels for files and images
+  - Every asset row shows a copy button that copies the [IMG:...|...] or [DOWNLOAD:...|...] symbol
 
-[TABLE]
-| What to verify | Expected result |
-|---|---|
-| GET /api/healthz | { "status": "ok" } |
-| POST /api/webhook/tradingview | Returns signal with id, ticker, action, receivedAt |
-| GET /api/signals/stats | Returns total, buys, sells, lastSignalAt, tickerBreakdown |
-| GET /api/settings | Contains hasApiToken (boolean), NOT publicApiToken |
-| pnpm run typecheck | Exits clean, zero errors |
-| pnpm --filter @workspace/api-spec run codegen | Exits clean, no duplicate export errors |
-[/TABLE]
+TypeScript:
+  pnpm run typecheck
+  → Must exit clean with no errors
 
-[/SECTION]
+Codegen:
+  pnpm --filter @workspace/api-spec run codegen
+  → Must exit clean. Re-run this any time you change openapi.yaml.
+```
 
-[NAV:none|none]
+---
 
-[/PAGE]
+## IMPORTANT NOTES FOR THE AI
+
+1. **Fire-and-forget pattern**: The webhook handler must respond to TradingView BEFORE calling
+   Public.com. Respond with res.json(formatSignal(signal)) first, then call placeOrderForSignal
+   with .catch() so any error doesn't crash the request handler.
+
+2. **Token security**: The API token stored in the settings table must NEVER be sent to the
+   browser. GET /settings always returns hasApiToken: boolean, never the token itself.
+   PUT /settings only updates the token if the field is explicitly present in the request body
+   (undefined = keep existing, null = clear, string = set new value).
+
+3. **Text/plain parsing**: TradingView sends webhooks as Content-Type: text/plain containing
+   JSON. The Express app must include express.text({ type: "text/plain" }) middleware, and
+   the webhook handler must attempt JSON.parse on string bodies.
+
+4. **Route order matters**: In signals.ts, define GET /signals/stats BEFORE GET /signals/:id.
+   Express matches routes in order — if :id is first, the string "stats" matches as an id.
+
+5. **Codegen barrel fix**: Orval generates both Zod schemas and TypeScript types. The Zod
+   schemas live in lib/api-zod/src/generated/api.ts. The codegen script must overwrite
+   lib/api-zod/src/index.ts after running orval to contain only:
+   export * from './generated/api';
+
+6. **Object storage paths**: When serving an uploaded file, the URL is:
+   /api/storage/objects{objectPath}
+   where objectPath comes from the upload response (e.g. /objects/uuid-here).
+   Full example: /api/storage/objects/objects/550e8400-e29b-41d4-a716-446655440000
