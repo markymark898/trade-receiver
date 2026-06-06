@@ -15,20 +15,9 @@ const TV_TEMPLATE = `{
   "action": "{{strategy.order.action}}",
   "ticker": "{{ticker}}",
   "exchange": "{{exchange}}",
-  "interval": "{{interval}}",
   "price": {{close}},
-  "open": {{open}},
-  "high": {{high}},
-  "low": {{low}},
-  "volume": {{volume}},
-  "time": "{{time}}",
-  "timenow": "{{timenow}}",
-  "currency": "{{syminfo.currency}}",
-  "basecurrency": "{{syminfo.basecurrency}}",
-  "position_size": {{strategy.position_size}},
-  "order_price": {{strategy.order.price}},
-  "order_id": "{{strategy.order.id}}",
-  "order_comment": "{{strategy.order.comment}}"
+  "interval": "{{interval}}",
+  "time": "{{timenow}}"
 }`;
 
 function fmt$(val: string | null | undefined) {
@@ -170,7 +159,7 @@ export default function Home() {
             {/* Step 2 — Message template */}
             <div className="space-y-2">
               <p className="text-xs font-mono text-orange-900/80">
-                <span className="text-primary font-bold">STEP 2</span> — Paste this into the alert <em>Message</em> box. It uses TradingView placeholders that get filled in when the alert fires:
+                <span className="text-primary font-bold">STEP 2</span> — Paste this into the alert <em>Message</em> box. TradingView fills in the placeholders when each alert fires:
               </p>
               <div className="bg-white border border-orange-200 shadow-sm rounded-md overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2 border-b border-orange-100 bg-orange-50/50">
@@ -187,7 +176,7 @@ export default function Home() {
                       onClick={() => setTemplateOpen((v) => !v)}
                     >
                       {templateOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                      {templateOpen ? "Hide" : "Preview"}
+                      {templateOpen ? "Hide" : "Show"}
                     </Button>
                   </div>
                 </div>
@@ -197,8 +186,25 @@ export default function Home() {
                   </pre>
                 )}
               </div>
-              <p className="text-xs text-orange-800/60 font-mono">
-                Note: strategy placeholders like <code className="text-orange-700 font-bold bg-orange-100 px-1 rounded">{"{{strategy.order.action}}"}</code> only work in Strategy alerts, not indicator alerts. For indicator alerts, replace them with hard-coded values like <code className="text-orange-700 font-bold bg-orange-100 px-1 rounded">"buy"</code>.
+
+              {/* Field explanations */}
+              <div className="bg-white border border-orange-100 rounded-md divide-y divide-orange-50 text-xs font-mono">
+                <div className="flex items-start gap-3 px-4 py-2.5">
+                  <code className="text-primary font-bold shrink-0 w-52">{"{{strategy.order.action}}"}</code>
+                  <span className="text-gray-600">Sends <strong>"buy"</strong> when your Long entry fires, <strong>"sell"</strong> when your close fires. This is what triggers the trade on Public.com.</span>
+                </div>
+                <div className="flex items-start gap-3 px-4 py-2.5">
+                  <code className="text-primary font-bold shrink-0 w-52">{"{{ticker}}"}</code>
+                  <span className="text-gray-600">The symbol you set the alert on (e.g. <strong>SPY</strong>, <strong>QQQ</strong>). Fixes the UNKNOWN issue — this is always a valid string.</span>
+                </div>
+                <div className="flex items-start gap-3 px-4 py-2.5">
+                  <code className="text-primary font-bold shrink-0 w-52">{"{{close}}"}</code>
+                  <span className="text-gray-600">Current bar close price — always a number, so the JSON is always valid. (Intentionally avoided <code className="bg-orange-50 px-1 rounded">{"{{strategy.order.price}}"}</code> — it expands to <code className="bg-red-50 text-red-700 px-1 rounded">na</code> for market orders and breaks JSON.)</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-orange-800/70 font-mono pt-1">
+                ⚠️ When creating the TradingView alert, select <strong>Order fills only</strong> (not "Bar close") so the webhook fires exactly when your strategy entries and exits execute.
               </p>
             </div>
 
