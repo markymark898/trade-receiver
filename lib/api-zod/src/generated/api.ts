@@ -400,6 +400,7 @@ export const GetTradeStatsResponse = zod.object({
   "losses": zod.number(),
   "totalProfitLoss": zod.string().describe('Signal-based P&L (indicator prices)'),
   "winRate": zod.number().describe('Signal-based win rate'),
+  "signalPairs": zod.number().optional().describe('Number of completed buy-sell pairs found in signals'),
   "actualWins": zod.number(),
   "actualLosses": zod.number(),
   "actualTotalProfitLoss": zod.string().describe('Brokerage P&L (actual fill prices)'),

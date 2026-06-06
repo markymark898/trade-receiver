@@ -610,6 +610,9 @@ components:
         winRate:
           type: number
           description: Signal-based win rate
+        signalPairs:
+          type: integer
+          description: Number of completed buy-sell pairs found in signals
         actualWins:
           type: integer
         actualLosses:

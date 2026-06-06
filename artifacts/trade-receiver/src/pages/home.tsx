@@ -444,6 +444,10 @@ export default function Home() {
                             <span className="text-xs text-muted-foreground font-normal ml-1">({tradeStats.wins}W / {tradeStats.losses}L)</span>
                           </span>
                         </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Completed pairs</span>
+                          <span className="font-mono">{tradeStats.signalPairs ?? 0}</span>
+                        </div>
                       </div>
                     );
                   })()}

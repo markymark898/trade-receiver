@@ -272,6 +272,8 @@ export interface TradeStats {
   totalProfitLoss: string;
   /** Signal-based win rate */
   winRate: number;
+  /** Number of completed buy-sell pairs found in signals */
+  signalPairs?: number;
   actualWins: number;
   actualLosses: number;
   /** Brokerage P&L (actual fill prices) */
