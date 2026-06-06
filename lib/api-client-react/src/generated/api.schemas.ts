@@ -237,6 +237,26 @@ export interface Trade {
   profitLoss?: string | null;
   /** @nullable */
   profitLossPct?: string | null;
+  /**
+     * Actual fill price from brokerage for the buy order
+     * @nullable
+     */
+  actualBuyPrice?: string | null;
+  /**
+     * Actual fill price from brokerage for the sell order
+     * @nullable
+     */
+  actualSellPrice?: string | null;
+  /**
+     * P&L based on actual brokerage fill prices
+     * @nullable
+     */
+  actualProfitLoss?: string | null;
+  /**
+     * P&L % based on actual brokerage fill prices
+     * @nullable
+     */
+  actualProfitLossPct?: string | null;
   openedAt: string;
   /** @nullable */
   closedAt?: string | null;
@@ -248,8 +268,18 @@ export interface TradeStats {
   closedTrades: number;
   wins: number;
   losses: number;
+  /** Signal-based P&L (indicator prices) */
   totalProfitLoss: string;
+  /** Signal-based win rate */
   winRate: number;
+  actualWins: number;
+  actualLosses: number;
+  /** Brokerage P&L (actual fill prices) */
+  actualTotalProfitLoss: string;
+  /** Brokerage win rate */
+  actualWinRate: number;
+  /** Number of closed trades with actual brokerage fill data */
+  actualTradesTracked: number;
 }
 
 export interface RequestUploadUrlBody {

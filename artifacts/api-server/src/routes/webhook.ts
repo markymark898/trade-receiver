@@ -1,8 +1,7 @@
 import { Router } from "express";
 import { db, signalsTable, tradesTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
-import { placeOrderForSignal } from "../lib/public-com";
-import { getSettings } from "../lib/public-com";
+import { placeOrderForSignal, getSettings } from "../lib/public-com";
 
 const router = Router();
 
@@ -93,23 +92,28 @@ async function trackTradeAndPlaceOrder(
   const price = priceStr != null ? Number(priceStr) : null;
 
   if (isBuy && price != null) {
-    // Calculate buy quantity: defaultQuantity * buyFraction
     const defaultQty = Number(settings?.defaultQuantity ?? "1");
     const fraction = Number(settings?.buyFraction ?? "1");
     const qty = Math.max(0.001, defaultQty * fraction);
 
-    await db.insert(tradesTable).values({
+    const [trade] = await db.insert(tradesTable).values({
       ticker,
       buySignalId: signalId,
       buyPrice: String(price),
       quantity: String(qty),
       status: "open",
-    });
+    }).returning();
 
-    await placeOrderForSignal(signalId, { ticker, action, price, quantity: qty });
+    const { fillPrice } = await placeOrderForSignal(signalId, { ticker, action, price, quantity: qty });
+
+    // Store the actual fill price from the brokerage if we got one
+    if (trade && fillPrice != null) {
+      await db.update(tradesTable)
+        .set({ actualBuyPrice: fillPrice })
+        .where(eq(tradesTable.id, trade.id));
+    }
 
   } else if (isSell) {
-    // Find the latest open trade for this ticker
     const [openTrade] = await db
       .select()
       .from(tradesTable)
@@ -123,29 +127,42 @@ async function trackTradeAndPlaceOrder(
       const pl = (price - buyPrice) * qty;
       const plPct = buyPrice > 0 ? ((price - buyPrice) / buyPrice) * 100 : 0;
 
-      // Never-sell-at-loss guard: skip the order if it would realize a loss
+      // Never-sell-at-loss guard
       if (settings?.neverSellAtLoss && pl < 0) {
-        // Leave trade open — do not place an order
         return;
       }
 
-      await db
-        .update(tradesTable)
-        .set({
-          sellSignalId: signalId,
-          sellPrice: String(price),
-          status: "closed",
-          profitLoss: pl.toFixed(4),
-          profitLossPct: plPct.toFixed(4),
-          closedAt: new Date(),
-        })
-        .where(eq(tradesTable.id, openTrade.id));
+      // Compute signal-based P&L
+      const updates: Partial<typeof tradesTable.$inferInsert> = {
+        sellSignalId: signalId,
+        sellPrice: String(price),
+        status: "closed",
+        profitLoss: pl.toFixed(4),
+        profitLossPct: plPct.toFixed(4),
+        closedAt: new Date(),
+      };
 
-      // Sell 100% of the tracked quantity
-      await placeOrderForSignal(signalId, { ticker, action, price, quantity: qty });
+      await db.update(tradesTable).set(updates).where(eq(tradesTable.id, openTrade.id));
+
+      const { fillPrice } = await placeOrderForSignal(signalId, { ticker, action, price, quantity: qty });
+
+      // Compute actual (brokerage) P&L if we have both actual prices
+      if (fillPrice != null) {
+        const actualSell = Number(fillPrice);
+        const actualBuy = openTrade.actualBuyPrice != null ? Number(openTrade.actualBuyPrice) : buyPrice;
+        const actualPl = (actualSell - actualBuy) * qty;
+        const actualPlPct = actualBuy > 0 ? ((actualSell - actualBuy) / actualBuy) * 100 : 0;
+
+        await db.update(tradesTable)
+          .set({
+            actualSellPrice: fillPrice,
+            actualProfitLoss: actualPl.toFixed(4),
+            actualProfitLossPct: actualPlPct.toFixed(4),
+          })
+          .where(eq(tradesTable.id, openTrade.id));
+      }
 
     } else if (!openTrade) {
-      // No tracked position — still forward the signal but with default qty
       await placeOrderForSignal(signalId, { ticker, action, price, quantity: null });
     }
   }

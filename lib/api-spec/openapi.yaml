@@ -571,6 +571,18 @@ components:
           type: ["string", "null"]
         profitLossPct:
           type: ["string", "null"]
+        actualBuyPrice:
+          type: ["string", "null"]
+          description: Actual fill price from brokerage for the buy order
+        actualSellPrice:
+          type: ["string", "null"]
+          description: Actual fill price from brokerage for the sell order
+        actualProfitLoss:
+          type: ["string", "null"]
+          description: P&L based on actual brokerage fill prices
+        actualProfitLossPct:
+          type: ["string", "null"]
+          description: P&L % based on actual brokerage fill prices
         openedAt:
           type: string
           format: date-time
@@ -580,7 +592,7 @@ components:
 
     TradeStats:
       type: object
-      required: [totalTrades, openTrades, closedTrades, wins, losses, totalProfitLoss, winRate]
+      required: [totalTrades, openTrades, closedTrades, wins, losses, totalProfitLoss, winRate, actualWins, actualLosses, actualTotalProfitLoss, actualWinRate, actualTradesTracked]
       properties:
         totalTrades:
           type: integer
@@ -594,8 +606,23 @@ components:
           type: integer
         totalProfitLoss:
           type: string
+          description: Signal-based P&L (indicator prices)
         winRate:
           type: number
+          description: Signal-based win rate
+        actualWins:
+          type: integer
+        actualLosses:
+          type: integer
+        actualTotalProfitLoss:
+          type: string
+          description: Brokerage P&L (actual fill prices)
+        actualWinRate:
+          type: number
+          description: Brokerage win rate
+        actualTradesTracked:
+          type: integer
+          description: Number of closed trades with actual brokerage fill data
 
     RequestUploadUrlBody:
       type: object

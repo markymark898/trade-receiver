@@ -379,6 +379,10 @@ export const ListTradesResponseItem = zod.object({
   "status": zod.string().describe('open | closed'),
   "profitLoss": zod.string().nullish(),
   "profitLossPct": zod.string().nullish(),
+  "actualBuyPrice": zod.string().nullish().describe('Actual fill price from brokerage for the buy order'),
+  "actualSellPrice": zod.string().nullish().describe('Actual fill price from brokerage for the sell order'),
+  "actualProfitLoss": zod.string().nullish().describe('P&L based on actual brokerage fill prices'),
+  "actualProfitLossPct": zod.string().nullish().describe('P&L % based on actual brokerage fill prices'),
   "openedAt": zod.coerce.date(),
   "closedAt": zod.coerce.date().nullish()
 })
@@ -394,8 +398,13 @@ export const GetTradeStatsResponse = zod.object({
   "closedTrades": zod.number(),
   "wins": zod.number(),
   "losses": zod.number(),
-  "totalProfitLoss": zod.string(),
-  "winRate": zod.number()
+  "totalProfitLoss": zod.string().describe('Signal-based P&L (indicator prices)'),
+  "winRate": zod.number().describe('Signal-based win rate'),
+  "actualWins": zod.number(),
+  "actualLosses": zod.number(),
+  "actualTotalProfitLoss": zod.string().describe('Brokerage P&L (actual fill prices)'),
+  "actualWinRate": zod.number().describe('Brokerage win rate'),
+  "actualTradesTracked": zod.number().describe('Number of closed trades with actual brokerage fill data')
 })
 
 

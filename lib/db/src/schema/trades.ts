@@ -12,6 +12,10 @@ export const tradesTable = pgTable("trades", {
   status: text("status").notNull().default("open"),
   profitLoss: numeric("profit_loss"),
   profitLossPct: numeric("profit_loss_pct"),
+  actualBuyPrice: numeric("actual_buy_price"),
+  actualSellPrice: numeric("actual_sell_price"),
+  actualProfitLoss: numeric("actual_profit_loss"),
+  actualProfitLossPct: numeric("actual_profit_loss_pct"),
   openedAt: timestamp("opened_at", { withTimezone: true }).defaultNow().notNull(),
   closedAt: timestamp("closed_at", { withTimezone: true }),
 });

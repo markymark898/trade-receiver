@@ -415,42 +415,91 @@ export default function Home() {
             P&amp;L Tracker
           </h2>
 
-          {/* Stats Row */}
+          {/* Two-column stats: Signal P&L vs Brokerage P&L */}
           {tradeStats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {(() => {
-                const pnl = Number(tradeStats.totalProfitLoss);
-                const isPos = pnl >= 0;
-                return (
-                  <Card className={`border shadow-sm ${isPos ? "border-green-200 bg-green-50/40" : "border-red-200 bg-red-50/40"}`}>
-                    <CardContent className="p-4">
-                      <p className="text-xs font-mono tracking-widest text-muted-foreground uppercase mb-1">Total P&amp;L</p>
-                      <p className={`text-2xl font-mono font-bold ${isPos ? "text-green-700" : "text-red-600"}`}>
-                        {isPos ? "+" : ""}${pnl.toFixed(2)}
-                      </p>
-                    </CardContent>
-                  </Card>
-                );
-              })()}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Signal / Indicator P&L */}
               <Card className="border-border shadow-sm">
-                <CardContent className="p-4">
-                  <p className="text-xs font-mono tracking-widest text-muted-foreground uppercase mb-1">Win Rate</p>
-                  <p className="text-2xl font-mono font-bold text-foreground">{tradeStats.winRate}%</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{tradeStats.wins}W / {tradeStats.losses}L</p>
+                <CardContent className="p-5">
+                  <p className="text-xs font-mono font-semibold tracking-widest text-primary uppercase mb-3">
+                    📈 Indicator P&amp;L
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mb-3">
+                    Based on TradingView signal prices — what the strategy <em>says</em> you made
+                  </p>
+                  {(() => {
+                    const pnl = Number(tradeStats.totalProfitLoss);
+                    const isPos = pnl >= 0;
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-end justify-between">
+                          <span className="text-xs text-muted-foreground">Total P&amp;L</span>
+                          <span className={`text-2xl font-mono font-bold ${isPos ? "text-green-700" : "text-red-600"}`}>
+                            {isPos ? "+" : ""}${pnl.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Win rate</span>
+                          <span className="font-mono font-semibold">{tradeStats.winRate}%
+                            <span className="text-xs text-muted-foreground font-normal ml-1">({tradeStats.wins}W / {tradeStats.losses}L)</span>
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
+
+              {/* Actual / Brokerage P&L */}
               <Card className="border-border shadow-sm">
-                <CardContent className="p-4">
-                  <p className="text-xs font-mono tracking-widest text-muted-foreground uppercase mb-1">Open Trades</p>
-                  <p className="text-2xl font-mono font-bold text-primary">{tradeStats.openTrades}</p>
+                <CardContent className="p-5">
+                  <p className="text-xs font-mono font-semibold tracking-widest text-primary uppercase mb-3">
+                    🏦 Brokerage P&amp;L
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mb-3">
+                    Based on actual fill prices from Public.com — what was <em>really</em> executed
+                  </p>
+                  {tradeStats.actualTradesTracked === 0 ? (
+                    <p className="text-sm text-muted-foreground italic">
+                      Fill prices will appear here once Public.com confirms orders
+                    </p>
+                  ) : (() => {
+                    const pnl = Number(tradeStats.actualTotalProfitLoss);
+                    const isPos = pnl >= 0;
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-end justify-between">
+                          <span className="text-xs text-muted-foreground">Total P&amp;L</span>
+                          <span className={`text-2xl font-mono font-bold ${isPos ? "text-green-700" : "text-red-600"}`}>
+                            {isPos ? "+" : ""}${pnl.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Win rate</span>
+                          <span className="font-mono font-semibold">{tradeStats.actualWinRate}%
+                            <span className="text-xs text-muted-foreground font-normal ml-1">({tradeStats.actualWins}W / {tradeStats.actualLosses}L)</span>
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">{tradeStats.actualTradesTracked} of {tradeStats.closedTrades} closed trades have fill data</p>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
-              <Card className="border-border shadow-sm">
-                <CardContent className="p-4">
-                  <p className="text-xs font-mono tracking-widest text-muted-foreground uppercase mb-1">Closed Trades</p>
-                  <p className="text-2xl font-mono font-bold text-foreground">{tradeStats.closedTrades}</p>
-                </CardContent>
-              </Card>
+            </div>
+          )}
+
+          {/* Summary bar: open / closed counts */}
+          {tradeStats && (
+            <div className="flex gap-3">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="w-2 h-2 rounded-full bg-primary inline-block" />
+                <span className="text-muted-foreground">{tradeStats.openTrades} open</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="w-2 h-2 rounded-full bg-gray-300 inline-block" />
+                <span className="text-muted-foreground">{tradeStats.closedTrades} closed</span>
+              </div>
             </div>
           )}
 
@@ -470,26 +519,32 @@ export default function Home() {
                 <table className="w-full text-sm text-left">
                   <thead className="text-xs text-muted-foreground bg-muted/50 border-b border-border">
                     <tr>
-                      <th className="px-5 py-3 font-mono font-medium">TICKER</th>
-                      <th className="px-5 py-3 font-mono font-medium">STATUS</th>
-                      <th className="px-5 py-3 font-mono font-medium text-right">BUY</th>
-                      <th className="px-5 py-3 font-mono font-medium text-right">SELL</th>
-                      <th className="px-5 py-3 font-mono font-medium text-right">QTY</th>
-                      <th className="px-5 py-3 font-mono font-medium text-right">P&amp;L</th>
-                      <th className="px-5 py-3 font-mono font-medium text-right">%</th>
-                      <th className="px-5 py-3 font-mono font-medium">OPENED</th>
+                      <th className="px-4 py-3 font-mono font-medium">TICKER</th>
+                      <th className="px-4 py-3 font-mono font-medium">STATUS</th>
+                      <th className="px-4 py-3 font-mono font-medium text-right">BUY SIGNAL</th>
+                      <th className="px-4 py-3 font-mono font-medium text-right">SELL SIGNAL</th>
+                      <th className="px-4 py-3 font-mono font-medium text-right">QTY</th>
+                      <th className="px-4 py-3 font-mono font-medium text-right border-l border-border/50 bg-orange-50/30">📈 SIGNAL P&amp;L</th>
+                      <th className="px-4 py-3 font-mono font-medium text-right bg-orange-50/30">%</th>
+                      <th className="px-4 py-3 font-mono font-medium text-right border-l border-border/50 bg-blue-50/30">🏦 BROKER P&amp;L</th>
+                      <th className="px-4 py-3 font-mono font-medium text-right bg-blue-50/30">%</th>
+                      <th className="px-4 py-3 font-mono font-medium">OPENED</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border font-mono">
                     {trades.map((trade) => {
                       const pl = trade.profitLoss != null ? Number(trade.profitLoss) : null;
                       const plPct = trade.profitLossPct != null ? Number(trade.profitLossPct) : null;
-                      const isWin = pl != null && pl > 0;
-                      const isLoss = pl != null && pl < 0;
+                      const apl = trade.actualProfitLoss != null ? Number(trade.actualProfitLoss) : null;
+                      const aplPct = trade.actualProfitLossPct != null ? Number(trade.actualProfitLossPct) : null;
+                      const plColor = (v: number | null) =>
+                        v == null ? "text-muted-foreground" : v > 0 ? "text-green-600" : v < 0 ? "text-red-500" : "text-muted-foreground";
+                      const fmt$ = (v: number | null) => v != null ? `${v >= 0 ? "+" : ""}$${Math.abs(v).toFixed(2)}` : "—";
+                      const fmtPct = (v: number | null) => v != null ? `${v >= 0 ? "+" : ""}${v.toFixed(2)}%` : "—";
                       return (
                         <tr key={trade.id} className="hover:bg-orange-50/40 transition-colors">
-                          <td className="px-5 py-3 font-bold text-foreground">{trade.ticker}</td>
-                          <td className="px-5 py-3">
+                          <td className="px-4 py-3 font-bold text-foreground">{trade.ticker}</td>
+                          <td className="px-4 py-3">
                             <Badge
                               variant="outline"
                               className={trade.status === "open"
@@ -499,20 +554,28 @@ export default function Home() {
                               {trade.status}
                             </Badge>
                           </td>
-                          <td className="px-5 py-3 text-right text-foreground">
+                          <td className="px-4 py-3 text-right text-foreground">
                             {trade.buyPrice != null ? `$${Number(trade.buyPrice).toFixed(4)}` : "—"}
                           </td>
-                          <td className="px-5 py-3 text-right text-muted-foreground">
+                          <td className="px-4 py-3 text-right text-muted-foreground">
                             {trade.sellPrice != null ? `$${Number(trade.sellPrice).toFixed(4)}` : "—"}
                           </td>
-                          <td className="px-5 py-3 text-right text-muted-foreground">{Number(trade.quantity).toLocaleString()}</td>
-                          <td className={`px-5 py-3 text-right font-bold ${isWin ? "text-green-600" : isLoss ? "text-red-500" : "text-muted-foreground"}`}>
-                            {pl != null ? `${pl >= 0 ? "+" : ""}$${pl.toFixed(2)}` : "—"}
+                          <td className="px-4 py-3 text-right text-muted-foreground">{Number(trade.quantity).toLocaleString()}</td>
+                          {/* Signal P&L */}
+                          <td className={`px-4 py-3 text-right font-bold border-l border-border/30 bg-orange-50/20 ${plColor(pl)}`}>
+                            {fmt$(pl)}
                           </td>
-                          <td className={`px-5 py-3 text-right ${isWin ? "text-green-600" : isLoss ? "text-red-500" : "text-muted-foreground"}`}>
-                            {plPct != null ? `${plPct >= 0 ? "+" : ""}${plPct.toFixed(2)}%` : "—"}
+                          <td className={`px-4 py-3 text-right bg-orange-50/20 ${plColor(plPct)}`}>
+                            {fmtPct(plPct)}
                           </td>
-                          <td className="px-5 py-3 text-muted-foreground text-xs">
+                          {/* Actual brokerage P&L */}
+                          <td className={`px-4 py-3 text-right font-bold border-l border-border/30 bg-blue-50/20 ${plColor(apl)}`}>
+                            {apl != null ? fmt$(apl) : <span className="text-muted-foreground/50 text-xs">pending</span>}
+                          </td>
+                          <td className={`px-4 py-3 text-right bg-blue-50/20 ${plColor(aplPct)}`}>
+                            {fmtPct(aplPct)}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">
                             {formatDistanceToNow(new Date(trade.openedAt), { addSuffix: true })}
                           </td>
                         </tr>

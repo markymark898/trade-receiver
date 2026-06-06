@@ -30,12 +30,27 @@ export async function getSettings() {
   };
 }
 
+/** Try to extract an actual fill price from a Public.com order response. */
+function extractFillPrice(resp: Record<string, unknown> | null): string | null {
+  if (!resp) return null;
+  // Try common field names used by Public.com and DriveWealth
+  for (const key of ["averagePrice", "avgPrice", "averageFilledPrice", "filledPrice", "lastFilledPrice", "price"]) {
+    const v = resp[key];
+    if (v != null && v !== "" && !isNaN(Number(v))) return String(v);
+  }
+  // Nested: order.averagePrice, etc.
+  const inner = resp["order"] as Record<string, unknown> | undefined;
+  if (inner && typeof inner === "object") return extractFillPrice(inner);
+  return null;
+}
+
+/** Returns the actual fill price from the brokerage response, or null if unavailable. */
 export async function placeOrderForSignal(signalId: number, opts: {
   ticker: string;
   action: string;
   price: number | null;
   quantity: number | null;
-}) {
+}): Promise<{ fillPrice: string | null }> {
   const settings = await getSettings();
 
   if (!settings?.publicApiToken || !settings.publicAccountId) {
@@ -44,7 +59,7 @@ export async function placeOrderForSignal(signalId: number, opts: {
       status: "skipped",
       errorMessage: "Public.com API token or account ID not configured",
     });
-    return;
+    return { fillPrice: null };
   }
 
   if (!settings.autoExecute) {
@@ -53,7 +68,7 @@ export async function placeOrderForSignal(signalId: number, opts: {
       status: "skipped",
       errorMessage: "Auto-execute is disabled",
     });
-    return;
+    return { fillPrice: null };
   }
 
   const side = opts.action.toLowerCase().includes("sell") ? "SELL" : "BUY";
@@ -101,12 +116,16 @@ export async function placeOrderForSignal(signalId: number, opts: {
       await db.update(executionsTable)
         .set({ status: "submitted", responseRaw: responseJson, updatedAt: new Date() })
         .where(eq(executionsTable.id, execution!.id));
+
+      const fillPrice = extractFillPrice(responseJson);
+      return { fillPrice };
     } else {
       const errMsg = (responseJson?.["message"] as string) ?? (responseJson?.["error"] as string) ?? `HTTP ${res.status}`;
       await db.update(executionsTable)
         .set({ status: "failed", errorMessage: errMsg, responseRaw: responseJson, updatedAt: new Date() })
         .where(eq(executionsTable.id, execution!.id));
       logger.error({ signalId, status: res.status, error: errMsg }, "Public.com order failed");
+      return { fillPrice: null };
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -114,5 +133,6 @@ export async function placeOrderForSignal(signalId: number, opts: {
       .set({ status: "failed", errorMessage: msg, updatedAt: new Date() })
       .where(eq(executionsTable.id, execution!.id));
     logger.error({ signalId, err: msg }, "Public.com order error");
+    return { fillPrice: null };
   }
 }
