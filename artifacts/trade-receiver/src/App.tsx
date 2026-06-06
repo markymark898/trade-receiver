@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,8 +8,13 @@ import Home from "@/pages/home";
 import SignalDetail from "@/pages/signal-detail";
 import Settings from "@/pages/settings";
 import Guides from "@/pages/guides";
+import Login from "@/pages/login";
 
 const queryClient = new QueryClient();
+
+function isAuthed() {
+  return sessionStorage.getItem("trdr_authed") === "1";
+}
 
 function Router() {
   return (
@@ -23,12 +29,18 @@ function Router() {
 }
 
 function App() {
+  const [authed, setAuthed] = useState(isAuthed);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
+        {authed ? (
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+        ) : (
+          <Login onLogin={() => setAuthed(true)} />
+        )}
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

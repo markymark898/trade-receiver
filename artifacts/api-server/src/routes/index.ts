@@ -6,10 +6,12 @@ import settingsRouter from "./settings";
 import storageRouter from "./storage";
 import guideAssetsRouter from "./guide-assets";
 import portfolioRouter from "./portfolio";
+import authRouter from "./auth";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(authRouter);
 router.use(webhookRouter);
 router.use(settingsRouter);
 router.use(signalsRouter);
