@@ -349,6 +349,29 @@ export const CreateGuideAssetBody = zod.object({
 
 
 /**
+ * @summary Get live portfolio from Public.com
+ */
+export const GetPortfolioResponse = zod.object({
+  "connected": zod.boolean(),
+  "error": zod.string().nullish(),
+  "accountId": zod.string().nullish(),
+  "accountType": zod.string().nullish(),
+  "buyingPower": zod.string().nullish(),
+  "cashOnlyBuyingPower": zod.string().nullish(),
+  "totalValue": zod.string().nullish(),
+  "positions": zod.array(zod.object({
+  "symbol": zod.string(),
+  "type": zod.string(),
+  "quantity": zod.string(),
+  "currentValue": zod.string().nullish(),
+  "averageCost": zod.string().nullish(),
+  "unrealizedPnl": zod.string().nullish(),
+  "unrealizedPnlPercent": zod.string().nullish()
+})).optional()
+})
+
+
+/**
  * @summary Delete a guide asset record
  */
 export const DeleteGuideAssetParams = zod.object({

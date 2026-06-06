@@ -14,6 +14,7 @@ tags:
   - name: executions
   - name: storage
   - name: guides
+  - name: portfolio
 paths:
   /healthz:
     get:
@@ -252,6 +253,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GuideAsset"
+
+  /portfolio:
+    get:
+      operationId: getPortfolio
+      tags: [portfolio]
+      summary: Get live portfolio from Public.com
+      responses:
+        "200":
+          description: Portfolio data or disconnected state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Portfolio"
 
   /guide-assets/{id}:
     delete:
@@ -539,6 +553,48 @@ components:
           type: ["integer", "null"]
         assetType:
           type: string
+
+    Position:
+      type: object
+      required: [symbol, type, quantity]
+      properties:
+        symbol:
+          type: string
+        type:
+          type: string
+        quantity:
+          type: string
+        currentValue:
+          type: ["string", "null"]
+        averageCost:
+          type: ["string", "null"]
+        unrealizedPnl:
+          type: ["string", "null"]
+        unrealizedPnlPercent:
+          type: ["string", "null"]
+
+    Portfolio:
+      type: object
+      required: [connected]
+      properties:
+        connected:
+          type: boolean
+        error:
+          type: ["string", "null"]
+        accountId:
+          type: ["string", "null"]
+        accountType:
+          type: ["string", "null"]
+        buyingPower:
+          type: ["string", "null"]
+        cashOnlyBuyingPower:
+          type: ["string", "null"]
+        totalValue:
+          type: ["string", "null"]
+        positions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Position"
 
     ConnectionTestResult:
       type: object

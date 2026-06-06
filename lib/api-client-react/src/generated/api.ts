@@ -28,6 +28,7 @@ import type {
   ListExecutionsParams,
   ListGuideAssetsParams,
   ListSignalsParams,
+  Portfolio,
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
   Settings,
@@ -1039,6 +1040,83 @@ export const useCreateGuideAsset = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getCreateGuideAssetMutationOptions(options));
     }
+
+export const getGetPortfolioUrl = () => {
+
+
+
+
+  return `/api/portfolio`
+}
+
+/**
+ * @summary Get live portfolio from Public.com
+ */
+export const getPortfolio = async ( options?: RequestInit): Promise<Portfolio> => {
+
+  return customFetch<Portfolio>(getGetPortfolioUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPortfolioQueryKey = () => {
+    return [
+    `/api/portfolio`
+    ] as const;
+    }
+
+
+export const getGetPortfolioQueryOptions = <TData = Awaited<ReturnType<typeof getPortfolio>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortfolio>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPortfolioQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPortfolio>>> = ({ signal }) => getPortfolio({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPortfolio>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPortfolioQueryResult = NonNullable<Awaited<ReturnType<typeof getPortfolio>>>
+export type GetPortfolioQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get live portfolio from Public.com
+ */
+
+export function useGetPortfolio<TData = Awaited<ReturnType<typeof getPortfolio>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortfolio>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPortfolioQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getDeleteGuideAssetUrl = (id: number,) => {
 

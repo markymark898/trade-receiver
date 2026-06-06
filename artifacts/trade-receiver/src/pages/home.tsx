@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useListSignals, useGetSignalStats, useListExecutions, getGetSignalStatsQueryKey, getListSignalsQueryKey, getListExecutionsQueryKey } from "@workspace/api-client-react";
+import { useListSignals, useGetSignalStats, useListExecutions, useGetPortfolio, getGetSignalStatsQueryKey, getListSignalsQueryKey, getListExecutionsQueryKey, getGetPortfolioQueryKey } from "@workspace/api-client-react";
 import { formatDistanceToNow, format } from "date-fns";
-import { Copy, Activity, TrendingUp, TrendingDown, Clock, Terminal, ChevronDown, ChevronUp, Settings2, BookOpen } from "lucide-react";
+import { Copy, Activity, TrendingUp, TrendingDown, Clock, Terminal, ChevronDown, ChevronUp, Settings2, BookOpen, Wallet, RefreshCw, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const TV_TEMPLATE = `{
   "action": "{{strategy.order.action}}",
@@ -30,9 +31,26 @@ const TV_TEMPLATE = `{
   "order_comment": "{{strategy.order.comment}}"
 }`;
 
+function fmt$(val: string | null | undefined) {
+  if (!val) return "—";
+  const n = parseFloat(val);
+  if (isNaN(n)) return val;
+  return n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+}
+
+function PnlBadge({ val }: { val: string | null | undefined }) {
+  if (!val) return <span className="text-muted-foreground text-xs">—</span>;
+  const n = parseFloat(val);
+  if (isNaN(n)) return <span className="text-xs">{val}</span>;
+  const color = n > 0 ? "text-green-600" : n < 0 ? "text-red-600" : "text-muted-foreground";
+  return <span className={`text-xs font-mono font-semibold ${color}`}>{n > 0 ? "+" : ""}{fmt$(val)}</span>;
+}
+
 export default function Home() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [templateOpen, setTemplateOpen] = useState(false);
+  const [portfolioRefreshing, setPortfolioRefreshing] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useGetSignalStats({
     query: { queryKey: getGetSignalStatsQueryKey(), refetchInterval: 5000 },
@@ -47,6 +65,16 @@ export default function Home() {
     { limit: 50 },
     { query: { queryKey: getListExecutionsQueryKey({ limit: 50 }), refetchInterval: 5000 } }
   );
+
+  const { data: portfolio, isLoading: portfolioLoading } = useGetPortfolio({
+    query: { queryKey: getGetPortfolioQueryKey(), refetchInterval: 30000 },
+  });
+
+  const refreshPortfolio = async () => {
+    setPortfolioRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: getGetPortfolioQueryKey() });
+    setPortfolioRefreshing(false);
+  };
 
   // Build a map of signalId -> execution status for quick lookup
   const execBySignalId = new Map(
@@ -240,6 +268,129 @@ export default function Home() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        {/* Portfolio Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-primary" />
+              Public.com Portfolio
+            </h2>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-xs text-muted-foreground hover:text-foreground"
+              onClick={refreshPortfolio}
+              disabled={portfolioRefreshing || portfolioLoading}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${portfolioRefreshing ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+          </div>
+
+          {portfolioLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
+            </div>
+          ) : !portfolio?.connected ? (
+            <Card className="border-dashed border-gray-200 bg-gray-50/50 shadow-none">
+              <CardContent className="flex items-center gap-3 p-5">
+                <AlertCircle className="w-5 h-5 text-gray-400 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Not connected to Public.com</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {portfolio?.error ?? "Add your API token and account ID in Settings to see live portfolio data."}
+                  </p>
+                </div>
+                <Link href="/settings" className="ml-auto shrink-0">
+                  <Button size="sm" variant="outline" className="h-8 text-xs">
+                    Open Settings
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Account summary cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="bg-card shadow-sm border-border">
+                  <CardContent className="p-5">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Buying Power</p>
+                    <p className="text-2xl font-mono font-bold text-foreground">{fmt$(portfolio.buyingPower)}</p>
+                    {portfolio.cashOnlyBuyingPower && portfolio.cashOnlyBuyingPower !== portfolio.buyingPower && (
+                      <p className="text-xs text-muted-foreground mt-1">Cash only: {fmt$(portfolio.cashOnlyBuyingPower)}</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-card shadow-sm border-border">
+                  <CardContent className="p-5">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Total Portfolio Value</p>
+                    <p className="text-2xl font-mono font-bold text-foreground">{fmt$(portfolio.totalValue)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{portfolio.positions?.length ?? 0} open position{portfolio.positions?.length !== 1 ? "s" : ""}</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-card shadow-sm border-border">
+                  <CardContent className="p-5">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Account</p>
+                    <p className="text-2xl font-mono font-bold text-foreground font-sans text-lg">{portfolio.accountId}</p>
+                    {portfolio.accountType && (
+                      <Badge variant="outline" className="mt-1 text-xs text-gray-500">{portfolio.accountType}</Badge>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Open positions table */}
+              {portfolio.positions && portfolio.positions.length > 0 && (
+                <Card className="border-border bg-card shadow-sm overflow-hidden">
+                  <CardHeader className="pb-0 pt-4 px-6">
+                    <CardTitle className="text-sm font-mono text-muted-foreground tracking-widest uppercase">Open Positions</CardTitle>
+                  </CardHeader>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs text-muted-foreground bg-muted/50 border-b border-border">
+                        <tr>
+                          <th className="px-6 py-3 font-mono font-medium">SYMBOL</th>
+                          <th className="px-6 py-3 font-mono font-medium">TYPE</th>
+                          <th className="px-6 py-3 font-mono font-medium text-right">QTY</th>
+                          <th className="px-6 py-3 font-mono font-medium text-right">AVG COST</th>
+                          <th className="px-6 py-3 font-mono font-medium text-right">CURRENT VALUE</th>
+                          <th className="px-6 py-3 font-mono font-medium text-right">UNREALIZED P&amp;L</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border font-mono">
+                        {portfolio.positions.map((pos) => (
+                          <tr key={pos.symbol} className="hover:bg-orange-50/40 transition-colors">
+                            <td className="px-6 py-3 font-bold text-foreground">{pos.symbol}</td>
+                            <td className="px-6 py-3">
+                              <Badge variant="outline" className="text-xs text-gray-500">{pos.type}</Badge>
+                            </td>
+                            <td className="px-6 py-3 text-right text-muted-foreground">{pos.quantity}</td>
+                            <td className="px-6 py-3 text-right text-muted-foreground">{fmt$(pos.averageCost)}</td>
+                            <td className="px-6 py-3 text-right font-semibold text-foreground">{fmt$(pos.currentValue)}</td>
+                            <td className="px-6 py-3 text-right">
+                              <PnlBadge val={pos.unrealizedPnl} />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              )}
+
+              {portfolio.positions?.length === 0 && (
+                <Card className="border-dashed border-gray-200 bg-gray-50/50 shadow-none">
+                  <CardContent className="p-5 text-center">
+                    <p className="text-sm text-muted-foreground">No open positions</p>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
         </div>
 
         {/* Live Feed */}

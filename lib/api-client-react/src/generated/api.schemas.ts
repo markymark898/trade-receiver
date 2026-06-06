@@ -251,6 +251,37 @@ export interface GuideAssetInput {
   assetType: string;
 }
 
+export interface Position {
+  symbol: string;
+  type: string;
+  quantity: string;
+  /** @nullable */
+  currentValue?: string | null;
+  /** @nullable */
+  averageCost?: string | null;
+  /** @nullable */
+  unrealizedPnl?: string | null;
+  /** @nullable */
+  unrealizedPnlPercent?: string | null;
+}
+
+export interface Portfolio {
+  connected: boolean;
+  /** @nullable */
+  error?: string | null;
+  /** @nullable */
+  accountId?: string | null;
+  /** @nullable */
+  accountType?: string | null;
+  /** @nullable */
+  buyingPower?: string | null;
+  /** @nullable */
+  cashOnlyBuyingPower?: string | null;
+  /** @nullable */
+  totalValue?: string | null;
+  positions?: Position[];
+}
+
 export interface ConnectionTestResult {
   ok: boolean;
   /** @nullable */
