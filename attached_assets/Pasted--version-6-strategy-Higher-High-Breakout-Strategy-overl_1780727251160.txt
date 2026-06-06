@@ -1,0 +1,134 @@
+//@version=6
+strategy("Higher High Breakout Strategy",
+     overlay = true,
+     pyramiding = 0,
+     initial_capital = 10000,
+     default_qty_type = strategy.percent_of_equity,
+     default_qty_value = 100)
+
+// =========================
+// INPUTS
+// =========================
+lookback = input.int(10, "Higher High Lookback", minval = 2)
+breakoutBuffer = input.float(0.05, "Breakout Buffer %", step = 0.01)
+
+emaFastLength = input.int(9, "Fast EMA")
+emaSlowLength = input.int(21, "Slow EMA")
+
+takeProfitPercent = input.float(0.60, "Take Profit %", step = 0.05)
+stopLossPercent = input.float(0.35, "Stop Loss %", step = 0.05)
+
+useRsiFilter = input.bool(true, "Use RSI Filter")
+rsiLength = input.int(14, "RSI Length")
+rsiMin = input.int(50, "Minimum RSI For Buy")
+
+// =========================
+// TREND
+// =========================
+emaFast = ta.ema(close, emaFastLength)
+emaSlow = ta.ema(close, emaSlowLength)
+
+trendBullish = emaFast > emaSlow
+trendBearish = emaFast < emaSlow
+
+// =========================
+// HIGHER HIGH BREAKOUT
+// =========================
+recentHigh = ta.highest(high[1], lookback)
+breakoutPrice = recentHigh * (1 + breakoutBuffer / 100)
+
+higherHighBreakout = close > breakoutPrice
+
+// =========================
+// HIGHER LOW SUPPORT
+// =========================
+recentLow = ta.lowest(low[1], lookback)
+higherLow = low > recentLow
+
+// =========================
+// RSI FILTER
+// =========================
+rsi = ta.rsi(close, rsiLength)
+rsiOk = not useRsiFilter or rsi >= rsiMin
+
+// =========================
+// ENTRY
+// =========================
+buyCondition = higherHighBreakout and higherLow and trendBullish and rsiOk
+
+if buyCondition and strategy.position_size == 0
+    strategy.entry("Long", strategy.long)
+
+// =========================
+// EXITS
+// =========================
+takeProfitPrice = strategy.position_avg_price * (1 + takeProfitPercent / 100)
+stopLossPrice = strategy.position_avg_price * (1 - stopLossPercent / 100)
+
+if strategy.position_size > 0
+    strategy.exit(
+         "TP / SL",
+         from_entry = "Long",
+         limit = takeProfitPrice,
+         stop = stopLossPrice)
+
+// Optional momentum sell
+sellSignal = trendBearish or close < emaFast
+
+if sellSignal and strategy.position_size > 0
+    strategy.close("Long", comment = "Momentum Exit")
+
+// =========================
+// LABELS
+// =========================
+newLong = strategy.position_size > 0 and strategy.position_size[1] == 0
+closedLong = strategy.position_size == 0 and strategy.position_size[1] > 0
+
+if newLong
+    label.new(
+         bar_index,
+         low,
+         "BUY",
+         style = label.style_label_up,
+         color = color.green,
+         textcolor = color.white,
+         size = size.normal)
+
+if closedLong
+    label.new(
+         bar_index,
+         high,
+         "SELL",
+         style = label.style_label_down,
+         color = color.red,
+         textcolor = color.white,
+         size = size.normal)
+
+// =========================
+// PLOTS
+// =========================
+plot(emaFast, title = "Fast EMA", color = color.orange)
+plot(emaSlow, title = "Slow EMA", color = color.blue)
+
+plot(recentHigh, title = "Recent High", color = color.new(color.green, 60))
+plot(breakoutPrice, title = "Breakout Price", color = color.new(color.lime, 0))
+
+plot(strategy.position_size > 0 ? takeProfitPrice : na,
+     title = "Take Profit",
+     color = color.green,
+     linewidth = 2,
+     style = plot.style_linebr)
+
+plot(strategy.position_size > 0 ? stopLossPrice : na,
+     title = "Stop Loss",
+     color = color.red,
+     linewidth = 2,
+     style = plot.style_linebr)
+
+plotshape(
+     buyCondition,
+     title = "Buy Signal",
+     style = shape.triangleup,
+     location = location.belowbar,
+     color = color.green,
+     size = size.small)
