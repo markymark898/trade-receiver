@@ -7,7 +7,6 @@ import Home from "@/pages/home";
 import SignalDetail from "@/pages/signal-detail";
 import Settings from "@/pages/settings";
 import Guides from "@/pages/guides";
-import GuideViewer from "@/pages/guide-viewer";
 
 const queryClient = new QueryClient();
 
@@ -18,8 +17,6 @@ function Router() {
       <Route path="/signals/:id" component={SignalDetail} />
       <Route path="/settings" component={Settings} />
       <Route path="/guides" component={Guides} />
-      <Route path="/guide" component={GuideViewer} />
-      <Route path="/guide/:slug" component={GuideViewer} />
       <Route component={NotFound} />
     </Switch>
   );

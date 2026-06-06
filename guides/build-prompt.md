@@ -1,6 +1,6 @@
 [PAGE:1|AI Build Prompt — TRD_REQ_RCVR Trading Bot]
 
-This document is the complete prompt set for rebuilding the TRD_REQ_RCVR app from scratch using an AI coding assistant (Replit Agent, Cursor, Claude Code, etc.). Work through each section in order. Every PROMPT block is meant to be pasted directly into your AI coder. Every CMD block is run in your terminal.
+This document is the complete prompt set for rebuilding the TRD_REQ_RCVR app from scratch using an AI coding assistant (Replit Agent, Cursor, Claude Code, etc.). Work through each section in order. Every [PROMPT] block is meant to be pasted directly into your AI coder. Every [CMD] block is run in your terminal.
 
 [NOTE]
 You can paste the entire document at once into Replit Agent, or hand each section one at a time for more control. Either approach works.
@@ -1210,8 +1210,6 @@ curl localhost:80/api/healthz
 
 Expected: [KEY]{ "status": "ok" }[/KEY]
 
-[/STEP]
-
 [STEP:2|Send a test webhook]
 
 [CMD]
@@ -1221,8 +1219,6 @@ curl -X POST localhost:80/api/webhook/tradingview \
 [/CMD]
 
 Expected: JSON object with [KEY]id[/KEY], [KEY]ticker[/KEY], [KEY]action[/KEY], [KEY]receivedAt[/KEY] fields.
-
-[/STEP]
 
 [STEP:3|Check signals and stats]
 
@@ -1236,8 +1232,6 @@ curl localhost:80/api/signals/stats
 
 Expected stats: [KEY]{ total, buys, sells, lastSignalAt, tickerBreakdown }[/KEY]
 
-[/STEP]
-
 [STEP:4|Confirm settings never leaks the API token]
 
 [CMD]
@@ -1249,8 +1243,6 @@ Expected: [KEY]{ "hasApiToken": false, "orderType": "MARKET", "autoExecute": tru
 [TIP]
 The response must contain [KEY]hasApiToken[/KEY] (a boolean), never [KEY]publicApiToken[/KEY] (the raw token). If you see the raw token in the response, the settings route has a bug.
 [/TIP]
-
-[/STEP]
 
 [STEP:5|Run a full TypeScript check]
 
