@@ -7,7 +7,25 @@ const PUBLIC_API_BASE = "https://api.public.com";
 
 export async function getSettings() {
   const rows = await db.select().from(settingsTable).limit(1);
-  return rows[0] ?? null;
+  const dbRow = rows[0] ?? null;
+
+  const envToken = process.env["PUBLIC_API_KEY"] ?? null;
+  const envAccountId = process.env["PUBLIC_ACCOUNT_ID"] ?? null;
+
+  if (!envToken && !envAccountId) return dbRow;
+
+  // Merge env vars as fallbacks — DB values take priority if set
+  return {
+    id: dbRow?.id ?? 0,
+    publicApiToken: dbRow?.publicApiToken || envToken,
+    publicAccountId: dbRow?.publicAccountId || envAccountId,
+    orderType: dbRow?.orderType ?? "MARKET",
+    instrumentType: dbRow?.instrumentType ?? "EQUITY",
+    defaultQuantity: dbRow?.defaultQuantity ?? "1",
+    timeInForce: dbRow?.timeInForce ?? "DAY",
+    autoExecute: dbRow?.autoExecute ?? true,
+    updatedAt: dbRow?.updatedAt ?? new Date(),
+  };
 }
 
 export async function placeOrderForSignal(signalId: number, opts: {
