@@ -289,6 +289,11 @@ export const UpdateSettingsResponse = zod.object({
 /**
  * @summary Test Public.com API connection
  */
+export const TestPublicConnectionBody = zod.object({
+  "publicApiToken": zod.string().optional(),
+  "publicAccountId": zod.string().optional()
+})
+
 export const TestPublicConnectionResponse = zod.object({
   "ok": zod.boolean(),
   "accountId": zod.string().nullish(),

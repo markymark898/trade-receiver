@@ -72,7 +72,12 @@ export default function Settings() {
   };
 
   const handleTest = () => {
-    testConn();
+    testConn({
+      data: {
+        publicApiToken: apiToken || undefined,
+        publicAccountId: accountId || undefined,
+      },
+    });
   };
 
   if (isLoading) {

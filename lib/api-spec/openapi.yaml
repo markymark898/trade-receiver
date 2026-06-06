@@ -189,6 +189,17 @@ paths:
       operationId: testPublicConnection
       tags: [settings]
       summary: Test Public.com API connection
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                publicApiToken:
+                  type: string
+                publicAccountId:
+                  type: string
       responses:
         "200":
           description: Connection test result

@@ -68,18 +68,23 @@ router.put("/settings", async (req, res) => {
   });
 });
 
-router.post("/settings/test-connection", async (_req, res) => {
+router.post("/settings/test-connection", async (req, res) => {
+  const body = req.body as { publicApiToken?: string; publicAccountId?: string } | undefined;
   const s = await getSettings();
 
-  if (!s?.publicApiToken || !s.publicAccountId) {
+  // Allow testing with values from the request body (unsaved form values)
+  const token = body?.publicApiToken || s?.publicApiToken;
+  const accountId = body?.publicAccountId || s?.publicAccountId;
+
+  if (!token || !accountId) {
     res.json({ ok: false, error: "API token and account ID are required" });
     return;
   }
 
   try {
     const r = await fetch(
-      `${PUBLIC_API_BASE}/userapigateway/trading/${s.publicAccountId}/portfolio/v2`,
-      { headers: { "Authorization": `Bearer ${s.publicApiToken}` } }
+      `${PUBLIC_API_BASE}/userapigateway/trading/${accountId}/portfolio/v2`,
+      { headers: { "Authorization": `Bearer ${token}` } }
     );
     const data = await r.json().catch(() => null) as Record<string, unknown> | null;
 

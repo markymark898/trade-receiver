@@ -34,6 +34,7 @@ import type {
   Settings,
   SettingsInput,
   SignalStats,
+  TestPublicConnectionBody,
   TradeSignal,
   WebhookPayload
 } from './api.schemas';
@@ -756,14 +757,15 @@ export const getTestPublicConnectionUrl = () => {
 /**
  * @summary Test Public.com API connection
  */
-export const testPublicConnection = async ( options?: RequestInit): Promise<ConnectionTestResult> => {
+export const testPublicConnection = async (testPublicConnectionBody?: TestPublicConnectionBody, options?: RequestInit): Promise<ConnectionTestResult> => {
 
   return customFetch<ConnectionTestResult>(getTestPublicConnectionUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      testPublicConnectionBody,)
   }
 );}
 
@@ -771,8 +773,8 @@ export const testPublicConnection = async ( options?: RequestInit): Promise<Conn
 
 
 export const getTestPublicConnectionMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testPublicConnection>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof testPublicConnection>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testPublicConnection>>, TError,{data?: BodyType<TestPublicConnectionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof testPublicConnection>>, TError,{data?: BodyType<TestPublicConnectionBody>}, TContext> => {
 
 const mutationKey = ['testPublicConnection'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -784,10 +786,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testPublicConnection>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testPublicConnection>>, {data?: BodyType<TestPublicConnectionBody>}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  testPublicConnection(requestOptions)
+          return  testPublicConnection(data,requestOptions)
         }
 
 
@@ -798,18 +800,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type TestPublicConnectionMutationResult = NonNullable<Awaited<ReturnType<typeof testPublicConnection>>>
-
+    export type TestPublicConnectionMutationBody = BodyType<TestPublicConnectionBody> | undefined
     export type TestPublicConnectionMutationError = ErrorType<unknown>
 
     /**
  * @summary Test Public.com API connection
  */
 export const useTestPublicConnection = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testPublicConnection>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testPublicConnection>>, TError,{data?: BodyType<TestPublicConnectionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof testPublicConnection>>,
         TError,
-        void,
+        {data?: BodyType<TestPublicConnectionBody>},
         TContext
       > => {
       return useMutation(getTestPublicConnectionMutationOptions(options));

@@ -303,6 +303,11 @@ export type ListExecutionsParams = {
 limit?: number;
 };
 
+export type TestPublicConnectionBody = {
+  publicApiToken?: string;
+  publicAccountId?: string;
+};
+
 export type ListGuideAssetsParams = {
 assetType?: ListGuideAssetsAssetType;
 };
