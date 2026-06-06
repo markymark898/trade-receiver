@@ -30,3 +30,9 @@ id = "dflFHHZ2tXJb6hstF8uoh"
 uri = "file://guides/SYMBOL-KEY.md"
 type = "text"
 title = "SYMBOL-KEY — Updated with IMG + DOWNLOAD"
+
+[[outputs]]
+id = "cn2wPW4cW4WYLjxD_Ipa2"
+uri = "file://guides/build-prompt.md"
+type = "text"
+title = "Master Build Prompt — Full App Rebuild"
