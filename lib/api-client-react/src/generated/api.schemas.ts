@@ -312,6 +312,10 @@ export interface TradeStats {
   actualWinRate: number;
   /** Number of closed trades with actual brokerage fill data */
   actualTradesTracked: number;
+  /** Paper trading starting capital from settings */
+  startingCapital?: string;
+  /** Paper trading current capital after all completed trades */
+  finalCapital?: string;
 }
 
 export interface RequestUploadUrlBody {

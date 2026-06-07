@@ -527,7 +527,9 @@ export const GetTradeStatsResponse = zod.object({
   "actualLosses": zod.number(),
   "actualTotalProfitLoss": zod.string().describe('Brokerage P&L (actual fill prices)'),
   "actualWinRate": zod.number().describe('Brokerage win rate'),
-  "actualTradesTracked": zod.number().describe('Number of closed trades with actual brokerage fill data')
+  "actualTradesTracked": zod.number().describe('Number of closed trades with actual brokerage fill data'),
+  "startingCapital": zod.string().optional().describe('Paper trading starting capital from settings'),
+  "finalCapital": zod.string().optional().describe('Paper trading current capital after all completed trades')
 })
 
 

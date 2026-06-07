@@ -428,12 +428,25 @@ export default function Home() {
               {/* Signal / Indicator P&L */}
               <Card className="border-border shadow-sm">
                 <CardContent className="p-5">
-                  <p className="text-xs font-mono font-semibold tracking-widest text-primary uppercase mb-3">
-                    📈 Indicator P&amp;L
+                  <div className="flex items-start justify-between mb-1">
+                    <p className="text-xs font-mono font-semibold tracking-widest text-primary uppercase">
+                      📈 Indicator P&amp;L
+                    </p>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200 leading-none">
+                      PAPER TRADING
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mb-1">
+                    Simulates trading signal prices with no real money. No broker connection needed — this is what your strategy <em>would have</em> made.
                   </p>
-                  <p className="text-[10px] text-muted-foreground mb-3">
-                    Based on TradingView signal prices — what the strategy <em>says</em> you made
-                  </p>
+                  {tradeStats.startingCapital && (
+                    <p className="text-[10px] text-muted-foreground mb-3">
+                      Starting capital: <span className="font-mono font-medium text-foreground">${Number(tradeStats.startingCapital).toLocaleString()}</span>
+                      {tradeStats.finalCapital && (
+                        <> → Current: <span className="font-mono font-medium text-foreground">${Number(tradeStats.finalCapital).toLocaleString()}</span></>
+                      )}
+                    </p>
+                  )}
                   {(() => {
                     const pnl = Number(tradeStats.totalProfitLoss);
                     const isPos = pnl >= 0;

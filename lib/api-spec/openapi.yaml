@@ -749,6 +749,12 @@ components:
         actualTradesTracked:
           type: integer
           description: Number of closed trades with actual brokerage fill data
+        startingCapital:
+          type: string
+          description: Paper trading starting capital from settings
+        finalCapital:
+          type: string
+          description: Paper trading current capital after all completed trades
 
     RequestUploadUrlBody:
       type: object

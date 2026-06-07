@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import {
   useGetSettings,
@@ -77,23 +77,26 @@ export default function Settings() {
   const [startingCapital, setStartingCapital] = useState("10000");
   const [initialized, setInitialized] = useState(false);
 
-  if (settings && !initialized) {
-    setPublicAccountId(settings.publicAccountId ?? "");
-    setWebullAccountId(settings.webullAccountId ?? "");
-    setOrderType(settings.orderType as "MARKET" | "LIMIT");
-    setInstrumentType(settings.instrumentType as "EQUITY" | "CRYPTO");
-    setDefaultQuantity(settings.defaultQuantity);
-    setTimeInForce(settings.timeInForce as "DAY" | "GTC");
-    setAutoExecute(settings.autoExecute);
-    setBuyFraction(settings.buyFraction ?? "1");
-    setNeverSellAtLoss(settings.neverSellAtLoss ?? false);
-    setStartingCapital(settings.startingCapital ?? "10000");
-    setInitialized(true);
-  }
+  useEffect(() => {
+    if (settings && !initialized) {
+      setPublicAccountId(settings.publicAccountId ?? "");
+      setWebullAccountId(settings.webullAccountId ?? "");
+      setOrderType(settings.orderType as "MARKET" | "LIMIT");
+      setInstrumentType(settings.instrumentType as "EQUITY" | "CRYPTO");
+      setDefaultQuantity(settings.defaultQuantity);
+      setTimeInForce(settings.timeInForce as "DAY" | "GTC");
+      setAutoExecute(settings.autoExecute);
+      setBuyFraction(settings.buyFraction ?? "1");
+      setNeverSellAtLoss(settings.neverSellAtLoss ?? false);
+      setStartingCapital(settings.startingCapital ?? "10000");
+      setInitialized(true);
+    }
+  }, [settings, initialized]);
 
   const { mutate: save, isPending: saving } = useUpdateSettings({
     mutation: {
       onSuccess: () => {
+        setInitialized(false); // Allow form to resync from the refetched server data
         queryClient.invalidateQueries({ queryKey: getGetSettingsQueryKey() });
         toast({ title: "Settings saved", description: "Your configuration has been updated." });
         setPublicToken("");
@@ -464,10 +467,21 @@ export default function Settings() {
 
             {/* Starting Capital for Indicator P&L */}
             <div className="pt-2 border-t border-border space-y-3">
+              <div className="rounded-lg bg-orange-50 border border-orange-200 p-3 space-y-1.5">
+                <p className="text-xs font-semibold text-orange-800 flex items-center gap-1.5">
+                  <span>📈</span> What is Paper Trading / Indicator P&amp;L?
+                </p>
+                <p className="text-xs text-orange-700 leading-relaxed">
+                  The <strong>Indicator P&amp;L</strong> is a pure paper trading simulation — <strong>no real money, no broker connection required</strong>. It simply replays your TradingView signals and calculates what you <em>would have</em> made if you had traded each buy/sell signal at the indicated price, starting with the capital below. Think of it as a backtest running in real-time as signals arrive.
+                </p>
+                <p className="text-xs text-orange-700 leading-relaxed">
+                  The <strong>Brokerage P&amp;L</strong> (shown separately) reflects actual fills from your connected broker accounts.
+                </p>
+              </div>
               <div>
-                <p className="text-sm font-medium">Paper Trading Starting Capital</p>
+                <p className="text-sm font-medium">Starting Capital</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Used to simulate the Indicator P&amp;L — how much your strategy would have made starting with this amount. Compounds across buy/sell pairs.
+                  Paper trading account size. Each trade compounds — winning trades grow the account, losing trades shrink it.
                 </p>
               </div>
               <div className="flex items-center gap-2">

@@ -26,7 +26,12 @@ function buildSettingsResponse(s: Awaited<ReturnType<typeof getSettings>>) {
 }
 
 router.get("/settings", async (_req, res) => {
-  const s = await getSettings();
+  let s = await getSettings();
+  // Ensure a row always exists so subsequent PUTs always UPDATE (never INSERT race)
+  if (!s) {
+    const [created] = await db.insert(settingsTable).values({}).returning();
+    s = created ?? null;
+  }
   res.json(buildSettingsResponse(s));
 });
 
